@@ -1,0 +1,22 @@
+"use client";
+import {useEffect,useState} from "react";
+type Status="Preparando"|"Em rota"|"Chegou"|"Entregue";
+type Pedido={id:number,cliente:string,destino:string,entregador:string,status:Status,pronto:boolean};
+const initial:Pedido[]=[{id:1042,cliente:"Ana",destino:"Zona 7",entregador:"Lucas",status:"Em rota",pronto:false},{id:1043,cliente:"Bruno",destino:"Centro",entregador:"Marina",status:"Preparando",pronto:false},{id:1044,cliente:"Carla",destino:"Zona 3",entregador:"Lucas",status:"Entregue",pronto:true}];
+export default function Home(){
+const [pedidos,setPedidos]=useState<Pedido[]>(initial);
+const [tab,setTab]=useState<"estabelecimento"|"entregador"|"consumidor">("estabelecimento");
+const [ready,setReady]=useState(false);
+useEffect(()=>{try{const data=localStorage.getItem("entrega-segura-demo");if(data)setPedidos(JSON.parse(data));}catch{}setReady(true)},[]);
+useEffect(()=>{if(ready)localStorage.setItem("entrega-segura-demo",JSON.stringify(pedidos))},[pedidos,ready]);
+const update=(id:number,patch:Partial<Pedido>)=>setPedidos(old=>old.map(p=>p.id===id?{...p,...patch}:p));
+const add=()=>setPedidos(old=>[{id:Math.max(...old.map(p=>p.id),1043)+1,cliente:"Cliente demonstração",destino:"Maringá",entregador:"Lucas",status:"Preparando",pronto:false},...old]);
+const statuses:Status[]=["Preparando","Em rota","Chegou","Entregue"];
+return <main><header><div className="brand"><span className="logo">↗</span><div>Entrega <b>Segura</b><small>Gestão inteligente de entregas</small></div></div><span className="demo">Ambiente demonstrativo</span></header>
+<section className="hero"><span className="eyebrow">ENTREGAS MAIS INTELIGENTES</span><h1>Mais controle. Menos espera.<br/><em>Entregas melhores.</em></h1><p>Uma experiência conectada para estabelecimentos, entregadores e consumidores.</p></section>
+<nav aria-label="Selecionar interface">{(["estabelecimento","entregador","consumidor"] as const).map(t=><button key={t} className={tab===t?"selected":""} onClick={()=>setTab(t)}>{t==="estabelecimento"?"🏪 Estabelecimento":t==="entregador"?"🛵 Entregador":"📦 Consumidor"}</button>)}</nav>
+{tab==="estabelecimento"&&<section><div className="heading"><div><h2>Painel de entregas</h2><p>Acompanhe os pedidos da operação.</p></div><button className="primary" onClick={add}>+ Novo pedido</button></div><div className="stats"><article><small>Pedidos totais</small><strong>{pedidos.length}</strong></article><article><small>Em andamento</small><strong>{pedidos.filter(p=>p.status!=="Entregue").length}</strong></article><article><small>Concluídos</small><strong>{pedidos.filter(p=>p.status==="Entregue").length}</strong></article></div><div className="cards">{pedidos.map(p=><article key={p.id}><div className="between"><b>Pedido #{p.id}</b><span className="status">{p.status}</span></div><h3>{p.cliente}</h3><p>📍 {p.destino}</p><p>🛵 {p.entregador}</p><p>{p.pronto?"✓ Cliente confirmou que está pronto":"Aguardando confirmação do cliente"}</p></article>)}</div></section>}
+{tab==="entregador"&&<section><div className="heading"><div><h2>Minhas entregas</h2><p>Atualize a etapa de cada pedido.</p></div></div><div className="cards">{pedidos.filter(p=>p.status!=="Entregue").map(p=><article key={p.id}><div className="between"><b>Pedido #{p.id}</b><span className="status">{p.status}</span></div><h3>{p.cliente}</h3><p>📍 {p.destino}</p><label htmlFor={"status"+p.id}>Atualizar situação</label><select id={"status"+p.id} value={p.status} onChange={e=>update(p.id,{status:e.target.value as Status})}>{statuses.map(s=><option key={s}>{s}</option>)}</select></article>)}</div></section>}
+{tab==="consumidor"&&<section><div className="heading"><div><h2>Acompanhe seu pedido</h2><p>Exemplo de acompanhamento sem instalar aplicativo.</p></div></div><div className="cards">{pedidos.filter(p=>p.status!=="Entregue").map(p=><article key={p.id}><div className="between"><b>Pedido #{p.id}</b><span className="status">{p.status}</span></div><h3>Olá, {p.cliente}!</h3><div className="map">🛵<small>Mapa ilustrativo • sem GPS real</small></div><p>Seu pedido: {p.status.toLowerCase()}</p><button className="primary" disabled={p.pronto} onClick={()=>update(p.id,{pronto:true})}>{p.pronto?"✓ Você confirmou que está pronto":"Estou pronto para receber"}</button><p className="fine">Crédito promocional ilustrativo. Nenhum valor é gerado.</p></article>)}</div></section>}
+<footer>Entrega Segura • MVP demonstrativo • Dados armazenados apenas neste navegador. Não use informações reais de clientes.</footer></main>
+}
