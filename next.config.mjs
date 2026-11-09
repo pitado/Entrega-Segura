@@ -1,3 +1,2 @@
-/** Static export for the demonstration MVP on Cloudflare Pages. */
-const nextConfig = { output: 'export', images: { unoptimized: true } };
+const nextConfig = {};
 export default nextConfig;
