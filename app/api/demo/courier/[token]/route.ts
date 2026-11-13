@@ -10,7 +10,7 @@ async function findOrder(token: string) {
   const orders = await sql`SELECT o.id, o.customer_name, o.destination, o.status, o.customer_ready, o.created_at, o.courier_id, o.destination_latitude, o.destination_longitude, o.demo_session_id, l.latitude, l.longitude, l.accuracy_m, l.location_source, l.updated_at AS location_updated_at, c.name AS courier_name FROM public.orders o JOIN public.couriers c ON c.id=o.courier_id LEFT JOIN public.order_locations l ON l.order_id=o.id WHERE o.courier_access_token=${token}::uuid AND o.created_at > now() - interval '7 days' LIMIT 1`;
   return orders[0];
 }
-export async function GET(_request: Request, { params }: Context) {
+export async function GET(request: Request, { params }: Context) {
   const { token } = await params;
   if (!isUUID(token)) return invalid();
   const origin=request.headers.get("origin");
