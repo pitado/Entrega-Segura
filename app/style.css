@@ -139,7 +139,7 @@
   display:block!important;background:transparent!important;
   border:0!important;border-radius:0!important;
   box-shadow:none!important;overflow:visible!important;
-  padding:0!important;transform:none!important;
+  padding:0!important;
 }
 .es-live-map .es-route-marker.moto::after{display:none!important}
 .es-live-map .es-motoboy-marker-image{
