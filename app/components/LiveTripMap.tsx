@@ -30,8 +30,8 @@ function badge(kind:"moto"|"dest"){
  const img=document.createElement("img");
  img.src=kind==="moto"?"/icons/motoboy-marker.svg":"/icons/destination-marker.svg";
  img.alt="";
- img.width=kind==="moto"?42:36;
- img.height=kind==="moto"?42:36;
+ img.width=kind==="moto"?40:32;
+ img.height=kind==="moto"?40:32;
  img.draggable=false;
  img.decoding="async";
  img.className="es-map-marker-image";

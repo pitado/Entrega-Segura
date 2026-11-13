@@ -1,6 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" role="img" aria-label="Destino">
-<circle cx="24" cy="24" r="21.5" fill="#ffffff" stroke="#e5d8d2" stroke-width="1.6"/>
-<circle cx="24" cy="24" r="13" stroke="#bf7958" stroke-width="3" fill="none"/>
-<circle cx="24" cy="24" r="6.5" stroke="#bf7958" stroke-width="2.5" fill="none"/>
-<circle cx="24" cy="24" r="2.8" fill="#bf7958"/>
+  <g fill="none" stroke="#bf7958" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="24" cy="24" r="13.5" stroke-width="4.3"/>
+    <circle cx="24" cy="24" r="5.6" stroke-width="3.5"/>
+    <path d="M24 4.5v8.2M24 35.3v8.2M4.5 24h8.2M35.3 24h8.2" stroke-width="3.7"/>
+  </g>
+  <circle cx="24" cy="24" r="1.8" fill="#bf7958"/>
 </svg>
