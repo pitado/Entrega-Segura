@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "entrega-segura",
+  "name": "entrega-segura-teste",
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-11-09",
   "compatibility_flags": [
