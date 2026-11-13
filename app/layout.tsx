@@ -1,4 +1,8 @@
 import "./style.css";
-import type { Metadata } from "next";
-export const metadata: Metadata = { title: "Entrega Segura", description: "Gestão inteligente de entregas" };
-export default function RootLayout({children}:{children:React.ReactNode}) {return <html lang="pt-BR"><body>{children}</body></html>}
+import type {Metadata} from "next";
+export const metadata:Metadata={
+ title:{default:"Entrega Segura",template:"%s | Entrega Segura"},
+ description:"Gestão de entregas, painel de estabelecimento e acompanhamento compartilhado.",
+ robots:{index:false,follow:false},
+};
+export default function RootLayout({children}:{children:React.ReactNode}){return <html lang="pt-BR"><body>{children}</body></html>;}
