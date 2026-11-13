@@ -73,6 +73,7 @@ export async function POST(req:Request) {
       if(!c.length)return fail("Entregador não encontrado",404);
       const rows=await sql.query("UPDATE orders SET courier_id=$1,updated_at=now() WHERE id=$2 AND establishment_id=$3 AND status IN ('preparing','on_route') RETURNING id",[body.courier_id,body.order_id,establishment_id]);
       if(!rows.length)return fail("Não foi possível atribuir o pedido",409);
+      await sql.query("DELETE FROM delivery_locations WHERE order_id=$1",[body.order_id]);
       return NextResponse.json({ok:true},{headers});
     }
     if(action==="status") {
@@ -80,7 +81,7 @@ export async function POST(req:Request) {
       const rows=await sql.query("UPDATE orders SET status=$1,updated_at=now(),delivered_at=CASE WHEN $1='delivered' THEN now() ELSE delivered_at END WHERE id=$2 AND establishment_id=$3 RETURNING id",[body.status,body.order_id,establishment_id]);
       if(!rows.length)return fail("Pedido não encontrado",404);
       await sql.query("INSERT INTO delivery_updates(order_id,status,actor_type) VALUES($1,$2,'establishment')",[body.order_id,body.status]);
-      if(body.status==="delivered"||body.status==="cancelled")await sql.query("UPDATE delivery_locations SET is_sharing=false WHERE order_id=$1",[body.order_id]);
+      if(body.status==="delivered"||body.status==="cancelled")await sql.query("DELETE FROM delivery_locations WHERE order_id=$1",[body.order_id]);
       return NextResponse.json({ok:true},{headers});
     }
     return fail("Ação desconhecida");
