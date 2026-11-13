@@ -35,7 +35,7 @@ export async function POST(req:Request,{params}:Context) {
       if(!(transitions[current]||[]).includes(body.status))return fail("Transição de status não permitida",409);
       await sql.query("UPDATE orders SET status=$1,updated_at=now(),delivered_at=CASE WHEN $1='delivered' THEN now() ELSE delivered_at END WHERE id=$2 AND courier_id=$3",[body.status,body.order_id,courier.id]);
       await sql.query("INSERT INTO delivery_updates(order_id,status,actor_type) VALUES($1,$2,'courier')",[body.order_id,body.status]);
-      if(body.status==="delivered")await sql.query("UPDATE delivery_locations SET is_sharing=false WHERE order_id=$1",[body.order_id]);
+      if(body.status==="delivered")await sql.query("DELETE FROM delivery_locations WHERE order_id=$1",[body.order_id]);
       return NextResponse.json({ok:true},{headers});
     }
     if(body.action==="location") {
@@ -46,7 +46,7 @@ export async function POST(req:Request,{params}:Context) {
       return NextResponse.json({ok:true},{headers});
     }
     if(body.action==="stop") {
-      await sql.query("UPDATE delivery_locations SET is_sharing=false WHERE order_id=$1 AND courier_id=$2",[body.order_id,courier.id]);
+      await sql.query("DELETE FROM delivery_locations WHERE order_id=$1 AND courier_id=$2",[body.order_id,courier.id]);
       return NextResponse.json({ok:true},{headers});
     }
     return fail("Ação desconhecida");
