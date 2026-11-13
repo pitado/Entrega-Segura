@@ -150,3 +150,37 @@
  .es-live-map .es-route-marker.moto{width:56px!important;height:64px!important}
  .es-live-map .es-motoboy-marker-image{width:56px;height:64px}
 }
+
+
+/* Marcadores do mapa, versão limpa: sem pinos grandes ou ícones sobrepostos. */
+.es-live-map .es-route-marker.moto,
+.es-live-map .es-route-marker.dest {
+ display:flex!important;
+ align-items:center!important;
+ justify-content:center!important;
+ background:transparent!important;
+ border:0!important;
+ border-radius:0!important;
+ box-shadow:none!important;
+ padding:0!important;
+ overflow:visible!important;
+ pointer-events:none;
+}
+.es-live-map .es-route-marker.moto {width:42px!important;height:42px!important}
+.es-live-map .es-route-marker.dest {width:36px!important;height:36px!important}
+.es-live-map .es-route-marker.moto::after,
+.es-live-map .es-route-marker.dest::after {content:none!important;display:none!important}
+.es-live-map .es-map-marker-image {
+ display:block;object-fit:contain;pointer-events:none;
+ filter:drop-shadow(0 2px 2px rgba(17,50,63,.18));
+ max-width:none!important;max-height:none!important;
+ user-select:none;
+}
+.es-live-map .es-route-marker.moto .es-map-marker-image{width:42px!important;height:42px!important}
+.es-live-map .es-route-marker.dest .es-map-marker-image{width:36px!important;height:36px!important}
+@media(max-width:650px){
+ .es-live-map .es-route-marker.moto {width:40px!important;height:40px!important}
+ .es-live-map .es-route-marker.dest {width:34px!important;height:34px!important}
+ .es-live-map .es-route-marker.moto .es-map-marker-image{width:40px!important;height:40px!important}
+ .es-live-map .es-route-marker.dest .es-map-marker-image{width:34px!important;height:34px!important}
+}

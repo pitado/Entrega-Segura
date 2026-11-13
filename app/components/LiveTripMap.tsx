@@ -27,20 +27,17 @@ function script(src:string,id:string):Promise<void>{
 function badge(kind:"moto"|"dest"){
  const el=document.createElement("div");
  el.className="es-route-marker "+kind;
- if(kind==="moto"){
-   const img=document.createElement("img");
-   img.src="/icons/motoboy-marker.svg";
-   img.alt="";
-   img.width=58;img.height=67;
-   img.draggable=false;
-   img.decoding="async";
-   img.className="es-motoboy-marker-image";
-   el.appendChild(img);
- }else{
-   el.innerHTML='<svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.3" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1" fill="white"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></svg>';
- }
+ const img=document.createElement("img");
+ img.src=kind==="moto"?"/icons/motoboy-marker.svg":"/icons/destination-marker.svg";
+ img.alt="";
+ img.width=kind==="moto"?42:36;
+ img.height=kind==="moto"?42:36;
+ img.draggable=false;
+ img.decoding="async";
+ img.className="es-map-marker-image";
+ el.appendChild(img);
  el.setAttribute("role","img");
- el.setAttribute("aria-label",kind==="moto"?"Motoboy":"Destino do cliente");
+ el.setAttribute("aria-label",kind==="moto"?"Localização do motoboy":"Destino do cliente");
  return el;
 }
 function distanceMeters(a:MapPoint,b:MapPoint){
@@ -130,7 +127,7 @@ export default function LiveTripMap({origin,destination,destinationAddress="",ro
      const old=markers.current[i];
      if(!p){if(old){old.remove();markers.current[i]=null;}return;}
      if(old){old.setLngLat(ll(p));return;}
-     markers.current[i]=new L.Marker({element:badge(i===0?"moto":"dest"),anchor:"bottom",offset:[0,-5]})
+     markers.current[i]=new L.Marker({element:badge(i===0?"moto":"dest"),anchor:"center",offset:[0,0]})
        .setLngLat(ll(p)).addTo(m);
    });
    if(follow){
