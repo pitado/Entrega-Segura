@@ -36,7 +36,7 @@ export default function DemoPage(){
   if(query==="merchant"||query==="courier"||query==="customer")setView(query);
   try{const saved=localStorage.getItem(STORAGE);if(saved)setDemo(safe(JSON.parse(saved)))}catch{}
   setReady(true);
-  const onStorage=(event:StorageEvent)=>{if(event.key===STORAGE&&event.newValue){try{setDemo(safe(JSON.parse(event.newValue)))}catch{}}};
+  const onStorage=(event:StorageEvent)=>{if(event.key===STORAGE&&event.newValue){try{const incoming=safe(JSON.parse(event.newValue));setDemo(current=>JSON.stringify(current)===JSON.stringify(incoming)?current:incoming)}catch{}}};
   window.addEventListener("storage",onStorage);
   return()=>window.removeEventListener("storage",onStorage);
  },[]);
