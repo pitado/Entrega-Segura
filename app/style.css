@@ -131,3 +131,22 @@
  .customer-destination{align-items:stretch;flex-direction:column}
  .customer-destination button{width:100%}
 }
+
+
+/* Marcador do motoboy aprovado: SVG original com entregador, baú e moto. */
+.es-live-map .es-route-marker.moto{
+  width:58px!important;height:67px!important;
+  display:block!important;background:transparent!important;
+  border:0!important;border-radius:0!important;
+  box-shadow:none!important;overflow:visible!important;
+  padding:0!important;transform:none!important;
+}
+.es-live-map .es-route-marker.moto::after{display:none!important}
+.es-live-map .es-motoboy-marker-image{
+  display:block;width:58px;height:67px;max-width:none;max-height:none;
+  object-fit:contain;pointer-events:none;user-select:none;
+}
+@media(max-width:650px){
+ .es-live-map .es-route-marker.moto{width:56px!important;height:64px!important}
+ .es-live-map .es-motoboy-marker-image{width:56px;height:64px}
+}

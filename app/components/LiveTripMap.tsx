@@ -27,9 +27,18 @@ function script(src:string,id:string):Promise<void>{
 function badge(kind:"moto"|"dest"){
  const el=document.createElement("div");
  el.className="es-route-marker "+kind;
- el.innerHTML=kind==="moto"?
- '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 16a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"/><path d="M16 16a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"/><path d="M7.5 14h5l4 -4h-10.5m1.5 4l4 -4"/><path d="M13 6h2l1.5 3l2 4"/></svg>':
- '<svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.3" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1" fill="white"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></svg>';
+ if(kind==="moto"){
+   const img=document.createElement("img");
+   img.src="/icons/motoboy-marker.svg";
+   img.alt="";
+   img.width=58;img.height=67;
+   img.draggable=false;
+   img.decoding="async";
+   img.className="es-motoboy-marker-image";
+   el.appendChild(img);
+ }else{
+   el.innerHTML='<svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.3" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1" fill="white"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></svg>';
+ }
  el.setAttribute("role","img");
  el.setAttribute("aria-label",kind==="moto"?"Motoboy":"Destino do cliente");
  return el;
