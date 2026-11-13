@@ -1,6 +1,7 @@
 "use client";
 import {useEffect,useRef,useState} from "react";
-import {LocateFixed,Navigation,MapPin} from "lucide-react";
+import {LocateFixed,Navigation,Navigation2,MapPin} from "lucide-react";
+import {wazeDirectionsUrl} from "../../lib/navigation";
 
 export type MapPoint={lat:number;lng:number};
 type Summary={minutes:number|null;km:number|null;provider:"mapbox"|"demo"|"none"};
@@ -194,6 +195,7 @@ export default function LiveTripMap({origin,destination,destinationAddress="",ro
    else if(coords.length===1)map.current.easeTo({center:coords[0],zoom:14,duration:550});
  }
  const address=dest?dest.lat+","+dest.lng:destinationAddress;
+ const wazeLink=wazeDirectionsUrl(dest,destinationAddress);
  const ext=(kind:"google"|"apple")=>kind==="google"?
    "https://www.google.com/maps/dir/?api=1&destination="+encodeURIComponent(address)+"&travelmode=driving":
    "https://maps.apple.com/?daddr="+encodeURIComponent(address)+"&dirflg=d";
@@ -215,7 +217,7 @@ export default function LiveTripMap({origin,destination,destinationAddress="",ro
  <div><small>Distância restante</small><strong>{summary.km!==null?summary.km.toLocaleString("pt-BR")+" km":"—"}</strong></div>
  <div><small>Atualização</small><strong>{updatedAt?new Date(updatedAt).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}):simulated?"Teste":"Sem GPS"}</strong></div></div>
  <div className="es-map-foot"><span>{explanatory}</span><div>
- {address&&<><a href={ext("google")} target="_blank" rel="noopener noreferrer">Google Maps</a>
+ {address&&<>{wazeLink&&<a href={wazeLink} className="es-waze-link" target="_blank" rel="noopener noreferrer" aria-label="Navegar até o destino com Waze"><Navigation2 size={14}/> Waze</a>}<a href={ext("google")} target="_blank" rel="noopener noreferrer">Google Maps</a>
  <a href={ext("apple")} target="_blank" rel="noopener noreferrer">Apple Maps</a></>}</div></div>
  {error&&<p className="es-map-issue" role="status"><MapPin size={13}/>{error}</p>}
  </section>;

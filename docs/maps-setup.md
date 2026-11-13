@@ -30,3 +30,13 @@ O Entrega Segura utiliza o **OpenFreeMap** como mapa de base, renderizado por Ma
 - O perfil utilizado é **`mapbox/driving-traffic`**, que inclui trânsito quando disponível e **não corresponde a roteamento específico para motos**.
 
 Informações de API: https://docs.mapbox.com/api/navigation/directions/ e https://docs.mapbox.com/help/getting-started/access-tokens/.
+
+## Navegação no Waze
+
+O **botão Navegar com Waze** está disponível no mapa de cada entrega e na área do motoboy, inclusive no laboratório. Utiliza [Waze Deep Links](https://developers.google.com/waze/deeplinks) por URL HTTPS, sem API key e sem ativação de faturamento.
+
+- Se houver latitude e longitude confirmadas, o link usa `ll=latitude,longitude`; caso contrário, busca o endereço com `q=`.
+- Envia `navigate=yes` e `vehicle_type=motorcycle`, além de `utm_source=entrega-segura`.
+- No celular com Waze instalado, abre o aplicativo; nos demais casos abre a experiência Web do Waze.
+- **O Waze não substitui o rastreamento do Entrega Segura e não envia ETA ao aplicativo.** O mapa embutido continua no MapLibre; as previsões internas são calculadas somente com Mapbox quando configurado.
+- Confira o destino antes de iniciar a navegação, especialmente quando o link usa endereço em texto e pode haver locais semelhantes.

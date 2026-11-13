@@ -161,3 +161,8 @@
  .home-entry .entry-links{order:3;margin-top:0;gap:10px}
  .home-entry .entry-links a{padding:16px}
 }
+
+/* Waze: link de navegação destacado, sem substituir o mapa do pedido. */
+.es-map-foot a.es-waze-link {display:inline-flex;align-items:center;gap:5px;background:#e8f2ed;border:1px solid #d3e6db;color:#246f51;padding:7px 10px;border-radius:8px;text-decoration:none;font-weight:750}
+.es-map-foot a.es-waze-link:hover,.es-map-foot a.es-waze-link:focus-visible{background:#dbede1;outline-offset:2px}
+@media(max-width:650px){.es-map-foot>div{display:flex;flex-wrap:wrap;align-items:center;gap:12px}.es-map-foot a.es-waze-link{min-height:36px}}
