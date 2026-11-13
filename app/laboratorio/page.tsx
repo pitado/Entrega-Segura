@@ -76,7 +76,7 @@ export default function Lab(){
  <div className="lab-share"><strong>Compartilhar acompanhamento</strong>
  <div className="lab-link-row"><a className="button ghost-button" href={url("courier",focus)} target="_blank" rel="noreferrer"><Truck size={15}/> Entregador</a><button className="button ghost-button" onClick={()=>void copy(url("courier",focus))}><Clipboard size={14}/>{copied===url("courier",focus)?"Copiado":"Copiar link"}</button></div>
  <div className="lab-link-row"><a className="button ghost-button" href={url("client",focus)} target="_blank" rel="noreferrer"><Route size={15}/> Consumidor</a><button className="button ghost-button" onClick={()=>void copy(url("client",focus))}><Clipboard size={14}/>{copied===url("client",focus)?"Copiado":"Copiar link"}</button></div></div>
- <MapSurface destination={focus.destination} destinationLatitude={focus.destination_latitude} destinationLongitude={focus.destination_longitude} status={focus.status} simulated={focus.location_source==="simulation"} latitude={focus.latitude} longitude={focus.longitude} updatedAt={focus.location_updated_at}/>
+ <MapSurface orderToken={focus.tracking_token} destination={focus.destination} destinationLatitude={focus.destination_latitude} destinationLongitude={focus.destination_longitude} status={focus.status} simulated={focus.location_source==="simulation"} latitude={focus.latitude} longitude={focus.longitude} updatedAt={focus.location_updated_at}/>
  {focus.location_source==="simulation"&&<p className="lab-caption">Posição simulada para teste; não é GPS real.</p>}
  </>:<p>Nenhum pedido selecionado.</p>}</aside>
  </div><p className="lab-safety-note">Sessão demonstrativa, válida por 24 horas. Use apenas dados fictícios.</p>

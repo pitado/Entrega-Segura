@@ -43,7 +43,7 @@ export default function TrackingView({token}:{token:string}){
     <header className="topbar"><a className="identity" href="/"><strong>Entrega Segura</strong></a></header>
     <div className="workspace-title"><h1>Sua entrega</h1></div>
     {error&&<div className="notice error" role="alert">{error}</div>}
-    {data?<div className="tracking-grid"><section className="tracking-main"><DeliveryMap courier={pos(data.latitude,data.longitude)} destination={pos(data.destination_latitude,data.destination_longitude)} address={data.destination} source={data.location_source} updatedAt={data.location_updated_at}/>
+    {data?<div className="tracking-grid"><section className="tracking-main"><DeliveryMap orderToken={token} courier={pos(data.latitude,data.longitude)} destination={pos(data.destination_latitude,data.destination_longitude)} address={data.destination} source={data.location_source} updatedAt={data.location_updated_at}/>
       <div className="tracking-update"><span className="live-dot"/> {data.location_updated_at?"Motoboy localizado · ":data.status==="on_route"?"Aguardando sinal · ":"Última consulta · "} {last||"—"}</div>
       {data.status==="on_route"&&!data.latitude&&<div className="notice info">O entregador está em rota, mas ainda não compartilhou uma posição recente.</div>}
       {data.status==="delivered"&&<div className="notice success">Pedido entregue. O rastreamento de localização foi encerrado.</div>}

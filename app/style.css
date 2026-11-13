@@ -97,3 +97,37 @@
  .demo-grid[data-view="customer"] .demo-details,
  .demo-grid[data-view="courier"] .demo-details{margin-top:0}
 }
+
+
+/* Marcadores desenhados em SVG, com legibilidade em mapas claros e em telas pequenas */
+.es-route-marker{position:relative;width:44px;height:44px;display:grid;place-items:center;
+ background:#2b6177;border:3px solid #fff;border-radius:16px;color:#fff;
+ box-shadow:0 3px 12px rgba(23,55,70,.28),0 0 0 1px rgba(16,53,68,.08);
+ transform:translateZ(0);user-select:none;pointer-events:none}
+.es-route-marker.dest{background:#c27552;border-radius:50%;width:41px;height:41px;
+ box-shadow:0 3px 10px rgba(92,55,42,.26),0 0 0 1px rgba(92,55,42,.12)}
+.es-route-marker.moto:after,.es-route-marker.dest:after{content:"";position:absolute;z-index:-1;
+ left:50%;bottom:-7px;width:13px;height:13px;transform:translateX(-50%) rotate(45deg);
+ background:inherit;border-right:3px solid #fff;border-bottom:3px solid #fff;border-radius:1px}
+.es-route-marker svg{display:block;flex-shrink:0;stroke:#fff}
+.es-live-map .maplibregl-control-container .maplibregl-ctrl-attrib{font-size:9px}
+.es-live-map .es-map-scene{isolation:isolate}
+.es-live-map .es-map-stats strong{font-variant-numeric:tabular-nums}
+.es-map-issue{line-height:1.45}
+@media (max-width:650px){
+ .es-route-marker{width:42px;height:42px}
+ .es-route-marker.dest{width:39px;height:39px}
+ .es-route-marker svg{max-width:25px;max-height:25px}
+ .es-live-map .es-map-scene{height:clamp(315px,45vh,425px)}
+ .es-live-map .es-map-foot{gap:8px}
+}
+
+
+.customer-destination{display:flex;align-items:center;justify-content:space-between;gap:15px;background:#f5f8f9;border:1px solid #e3ebee;border-radius:9px;padding:14px 15px;margin:15px 0}
+.customer-destination strong{display:block;font-size:12px;font-weight:700;color:#334c58}
+.customer-destination p{font-size:11px;color:#8c9ba3;line-height:1.5;margin:5px 0 0}
+.customer-destination button{flex:0 0 auto}
+@media(max-width:670px){
+ .customer-destination{align-items:stretch;flex-direction:column}
+ .customer-destination button{width:100%}
+}

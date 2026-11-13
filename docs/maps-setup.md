@@ -1,38 +1,32 @@
-# Integração dos mapas — Entrega Segura
+# Integração de Mapas — Mapbox + MapLibre
 
-## Google Maps (mapa interno)
+O Entrega Segura utiliza o **OpenFreeMap** como mapa de base, renderizado por MapLibre GL JS. Os pontos de motoboy e destino são SVGs simples e legíveis no mobile. O **Mapbox Directions** gera o percurso pelas ruas e uma estimativa para veículos; não é necessário habilitar Google Cloud.
 
-A interface já usa Google Maps JavaScript API e Routes Library quando encontra a variável `GOOGLE_MAPS_BROWSER_KEY`. Caso contrário, exibe um mapa de apoio baseado em MapLibre e OpenFreeMap, sem previsão de trânsito. O mapa mostra um marcador de moto e um marcador de destino. Quando o navegador do entregador compartilha GPS e existe um destino, a Routes Library retorna a linha de ruas, distância e tempo previsto de percurso.
+## Ativar a rota e o ETA
 
-1. Abra https://console.cloud.google.com/ e selecione o projeto Entrega Segura (ou crie um).
-2. Vincule uma conta de faturamento, se exigido. Antes, configure alertas e cotas de API; alertas não bloqueiam cobranças.
-3. Habilite **Maps JavaScript API**, **Routes API** e **Geocoding API** em APIs & Services → Library.
-4. APIs & Services → Credentials → Create credentials → API key.
-5. Defina **Application restrictions: Websites** e inclua:
-   - `https://entrega-segura2.miguellpitaa.workers.dev/*`
-   - `https://entregasegura.miguelpita.com.br/*` quando o domínio estiver vinculado ao Worker
-6. Em API restrictions, permita somente as APIs Maps JavaScript, Routes e Geocoding.
-7. Cloudflare → Workers & Pages → `entrega-segura2` → Settings → Variables and Secrets → Add → `GOOGLE_MAPS_BROWSER_KEY`. Cole a chave, salve e publique uma versão com a variável.
+1. Acesse https://account.mapbox.com/ e crie sua conta.
+2. Em https://account.mapbox.com/access-tokens/ crie um token dedicado ao Entrega Segura, com as menores permissões necessárias para consultar Directions. Verifique as regras de cobrança e configure alertas/limites de uso antes de ativar serviços faturados. **Não autorize cobranças sem revisar os preços.**
+3. Abra https://dash.cloudflare.com/ → Workers & Pages → `entrega-segura2` → Settings → Variables and Secrets.
+4. Crie o secret **`MAPBOX_ACCESS_TOKEN`** e cole seu token no valor. Não precisa copiar o token para GitHub nem enviá-lo nesta conversa.
+5. Salve e publique uma nova versão do Worker.
+6. No celular, abra `/demo` para visualizar a moto e a linha por ruas na simulação. Em `/laboratorio`, inicie sessão Neon e teste os links nos três lados.
 
-Não envie a chave no chat, nem no GitHub. A chave de navegador fica visível no JavaScript e deve ser restrita pelo próprio Google.
+**Atenção à restrição de URL:** o token é usado no lado **servidor** do Worker; tokens do Mapbox com restrições de referer/webpage podem rejeitar chamadas feitas pelo Worker, que não são chamadas diretas do navegador. Use escopos mínimos, não exponha o segredo e aplique controles de uso no Mapbox e Cloudflare.
 
-## Resultados esperados
+## Tratamento de localização e privacidade
 
-- **Sem chave:** MapLibre/OpenFreeMap para visualização, simulação ilustrativa, botões Google Maps/Apple Maps que abrem navegação externa; ETA real indisponível.
-- **Com chave e APIs habilitadas:** Google Maps como base, mapa ajustado ao motoboy e destino, linha pelo sistema viário e estimativas pela Routes Library.
-- **GPS real:** posição só é recebida após permissão do entregador; o navegador precisa continuar ativo para atualizar a viagem.
-- **Posição desatualizada:** o sistema deixa de apresentar rastreamento como ativo quando a posição ultrapassa a janela de validade.
-- **Destino em texto:** Geocoder JavaScript converte endereço em coordenadas. Para uma entrega real, informe endereço completo com número, bairro e cidade; coordenadas confirmadas pelo consumidor são preferíveis.
-- **Rotas de moto:** por padrão, utiliza DRIVING como referência de trânsito. Roteamento TWO_WHEELER tem limitações de disponibilidade, custo maior e avisos especiais; só habilitar após avaliação.
-- **iPhone:** botão Apple Maps abre a navegação externa diretamente, sem chave. MapKit JS embarcado é uma integração futura independente.
+- A posição é enviada somente após a ação do entregador e autorização explícita do navegador.
+- O cliente pode permitir uma leitura pontual da localização para definir o destino; não há acompanhamento contínuo do consumidor.
+- A API de rotas valida token do pedido (ou posição do roteiro de demonstração) antes de consultar o Mapbox; não aceita coordenadas arbitrárias do navegador.
+- Localização com mais de dois minutos não é considerada atual no fluxo operacional.
+- Sem GPS e destino confirmado, a tela apresenta “—” para tempo/distância, evitando ETA inventado.
+- As atualizações do status são consultadas periodicamente; o navegador não mantém GPS em segundo plano de forma garantida.
 
-## Segurança e limites
+## Performance
 
-A página de simulação é fictícia e não deve ser confundida com rastreamento de pessoas reais. Os links de acompanhamento têm acesso à entrega específica. A localização só deve ser compartilhada durante a entrega ativa e com consentimento. Para produção, é necessário autenticação forte de entregadores, políticas LGPD, limites por IP, revogação de links e rastreamento nativo em segundo plano.
+- MapLibre renderiza blocos vetoriais com carregamento progressivo.
+- O Worker consulta o Mapbox Directions apenas quando a viagem está ativa; o front evita recalcular com cada movimento de poucos metros e o Worker usa cache curto.
+- A rota tem linha principal com borda branca para contraste; marcadores distinguem moto (azul-ardósia) e destino (terracota).
+- O perfil utilizado é **`mapbox/driving-traffic`**, que inclui trânsito quando disponível e **não corresponde a roteamento específico para motos**.
 
-## Teste pelo celular
-
-1. Acesse `/demo`, selecione Entregador e inicie viagem. Confira mapa, marcador de moto, destino e mudança de posição; sem chave, tempo/distância são ilustrativos.
-2. Abra Consumidor no mesmo navegador para acompanhar a simulação.
-3. Para testar em dois aparelhos, acesse `/laboratorio`; inicie uma sessão fictícia do Neon, crie pedido e compartilhe os links individuais. O Worker precisa da secret `DATABASE_URL` do banco Neon `entrega_segura`.
-4. Para rastreamento real, use os links por pedido no painel autenticado e autorize localização no navegador do entregador.
+Informações de API: https://docs.mapbox.com/api/navigation/directions/ e https://docs.mapbox.com/help/getting-started/access-tokens/.

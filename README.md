@@ -1,33 +1,61 @@
-# Entrega Segura — MVP operacional e de simulação
+# Entrega Segura — MVP de entregas
 
-Aplicação experimental para estabelecimentos com frota própria, entregadores e consumidores. Next.js 15 com OpenNext em Cloudflare Workers e PostgreSQL 17 no Neon.
+Aplicação responsiva para **estabelecimento, motoboy e consumidor**, com Next.js 15, Cloudflare Workers/OpenNext, banco Neon PostgreSQL e mapas MapLibre/OpenFreeMap.
 
-## Interfaces
+## Fluxos
 
-- Painel principal (/): acesso por senha, cadastro de entregadores e pedidos, despacho, status, localização atual autorizada e links de acompanhamento.
-- Entregador (/entregador): acesso por token individual revogável, etapas de entrega, navegação externa, compartilhamento opcional de GPS enquanto a página está ativa.
-- Consumidor (/acompanhar): link único por pedido, mapa com localização autorizada e confirmação de recebimento pronto.
-- Simulação (/demo): viagem fictícia com deslocamento automático, etapas, confirmação do cliente e troca de interfaces sem autenticação.
+- **Estabelecimento** (`/`): login administrativo por senha de MVP, cadastro de motoboys, criação e atribuição de pedidos, avanço/cancelamento com validação de status e link individual do cliente. Os pedidos demonstrativos **não são exibidos** no painel operacional.
+- **Motoboy** (`/entregador/[token]`): acesso por link revogável, confirmação de etapas, envio de GPS autorizado enquanto a página está ativa e navegação externa.
+- **Consumidor** (`/acompanhar/[token]`): acompanhamento de etapas e GPS recente, confirmação de recebimento pronto e opção explícita para informar sua localização como destino exato.
+- **Simulação local** (`/demo`): viagem fictícia em armazenamento do navegador, sem login e sem sincronizar entre dispositivos.
+- **Laboratório Neon** (`/laboratorio`): sessões de demonstração isoladas, com pedido, entregador e links individuais sincronizados entre dispositivos. Sessões válidas por 24h.
 
-A simulação usa armazenamento local e sincronização entre abas no mesmo navegador. Não sincroniza entre aparelhos. A base cartográfica de simulação usa OpenStreetMap, e o trajeto é ilustrativo. A aplicação real armazena dados no Neon; links individuais usam backend e permissões.
+## Mapas e previsão de chegada
 
-## Configurar Cloudflare Worker
+- **MapLibre GL + OpenFreeMap** renderiza ruas, pontos e marcadores SVG de moto/destino, mesmo sem a chave Mapbox.
+- **Mapbox Directions API** (`mapbox/driving-traffic`) calcula rota pelas ruas, distância restante e ETA para **automóvel**, com dados de trânsito onde disponíveis. Não representa tempo garantido nem rota exclusiva para motocicletas.
+- O Worker consulta Mapbox **somente se** `MAPBOX_ACCESS_TOKEN` estiver configurado; a chave não é enviada ao navegador.
+- As rotas solicitadas são vinculadas a um pedido identificável pelo seu token de acompanhamento ou a um número de etapa do simulador local; não existe proxy público para coordenadas arbitrárias. Há cache curto e controle de frequência no cliente.
+- Em pedidos operacionais, a previsão por rota exige **posição recente do motoboy e destino georreferenciado**. O consumidor pode confirmar o ponto via localização do navegador. Sem estes dados, o mapa não inventa o ETA.
+- Links externos Google Maps e Apple Maps continuam disponíveis.
 
-Em Settings > Variables and Secrets do projeto entrega-segura2:
+Veja [como configurar o Mapbox](docs/maps-setup.md).
 
-| Variável | Tipo | Uso |
-| --- | --- | --- |
-| DATABASE_URL | Secret | URL PostgreSQL da base entrega_segura no Neon |
-| MVP_ADMIN_PASSWORD | Secret | Senha longa e exclusiva de administração do MVP |
-| GOOGLE_MAPS_BROWSER_KEY | Text | Chave do Google Maps JavaScript com restrição por domínio |
-| APPLE_MAPKIT_JS_TOKEN | Text | JWT válido do MapKit JS para o domínio |
+## Configuração do Cloudflare Worker
 
-A conta Google deve ter Maps JavaScript API habilitada e cobrança configurada. A chave deve ser restrita ao seu domínio nas restrições de referência HTTP e somente às APIs necessárias. Apple MapKit JS exige credenciais Apple Developer e token MapKit JS assinado (JWT). Tokens têm prazo de validade e precisarão de renovação automatizada para uso contínuo.
+Worker `entrega-segura2`, GitHub branch `teste-deploy`. Configure em **Settings → Variables and Secrets**:
 
-Workers Builds: branch teste-deploy; build npx opennextjs-cloudflare build; deploy npx wrangler deploy.
+| Variável | Tipo | Necessidade |
+|---|---|---|
+| `DATABASE_URL` | Secret | Obrigatório para pedidos, GPS e sessão de teste no Neon |
+| `MVP_ADMIN_PASSWORD` | Secret | Obrigatório para acesso ao painel operacional |
+| `MAPBOX_ACCESS_TOKEN` | Secret | Opcional até ativar Directions/ETA do Mapbox |
 
-## Segurança e limites do MVP
+Não publique nenhuma credencial. Habilitar faturamento no Mapbox depende de autorização específica do responsável pela conta. O sistema não ativa serviços pagos automaticamente.
 
-A operação real só é habilitada quando DATABASE_URL e MVP_ADMIN_PASSWORD estiverem configuradas. O estabelecimento é único nesta versão e usa senha por cookie HttpOnly, Secure e SameSite=Strict. O entregador recebe uma URL de acesso revogável; o consumidor recebe token UUID não enumerável válido por sete dias. O painel não está pronto para empresas múltiplas. O GPS não inicia sem ação do entregador e permissão do navegador; localização fica indisponível quando não atualizada por dois minutos. No iPhone e Android, atualização em segundo plano não é garantida com o navegador fechado ou tela bloqueada. Antes de uso comercial, implementar autenticação individual, rate limiting, auditoria, política de privacidade, consentimento e retenção LGPD.
+Build: `npx opennextjs-cloudflare build`; deploy: `npx wrangler deploy`.
 
-Não inclui ainda créditos financeiros/cashback, WhatsApp automático, ETA real, IA preditiva ou navegação curva a curva integrada. Esses itens não são anunciados como funcionais.
+## Auditoria e testes
+
+A branch executa workflow no GitHub Actions: TypeScript, compilação Next.js e **smoke test do Worker ativo**. O teste funcional cria uma sessão **fictícia** no Neon, gera dois links, atribui motoboy, avança status, envia posição simulada, recebe confirmação do consumidor, conclui entrega e testa bloqueios de segurança. Ele não altera nem remove pedidos operacionais.
+
+Execute manualmente:
+
+```bash
+npm install
+npm run typecheck
+npm run build
+npm run test:smoke
+```
+
+Use `TEST_BASE_URL` para direcionar os testes para outra instalação do MVP. Requer `DATABASE_URL` funcional no Worker e estabelecimento piloto preparado para o laboratório.
+
+## Antes da produção
+
+- Sistema usa **um estabelecimento**, ainda não possui autenticação multiempresa ou perfis individuais completos.
+- O GPS de navegador depende de permissão e página ativa; rastreamento de segundo plano exige app nativo.
+- Tokens são acessos individuais: não compartilhe publicamente links de motoboys ou consumidores.
+- Exigem-se política de privacidade e retenção, limite por IP/WAF, auditoria, controle de custos do provedor, autenticação forte e testes com aparelhos reais.
+- Cashback financeiro, WhatsApp automático e modelos de IA preditiva **não** fazem parte das funcionalidades operacionais implementadas.
+
+O repositório é um MVP, não uma plataforma de produção pronta para operar entregas com dados reais.

@@ -12,8 +12,8 @@ export async function GET(req:Request) {
     const sql=db();
     const [establishments,couriers,orders]=await Promise.all([
       sql.query("SELECT id,name FROM establishments ORDER BY created_at DESC LIMIT 10",[]),
-      sql.query("SELECT id,name,active,vehicle_type,establishment_id FROM couriers ORDER BY created_at DESC LIMIT 100",[]),
-      sql.query("SELECT o.id,o.customer_name,o.customer_phone,o.destination,o.notes,o.status,o.customer_ready,o.tracking_token,o.created_at,o.delivered_at,o.courier_id,c.name AS courier_name,l.latitude,l.longitude,l.accuracy_m,l.recorded_at,l.is_sharing FROM orders o LEFT JOIN couriers c ON c.id=o.courier_id LEFT JOIN delivery_locations l ON l.order_id=o.id ORDER BY o.created_at DESC LIMIT 100",[])
+      sql.query("SELECT id,name,active,vehicle_type,establishment_id FROM couriers WHERE demo_session_id IS NULL ORDER BY created_at DESC LIMIT 100",[]),
+      sql.query("SELECT o.id,o.customer_name,o.customer_phone,o.destination,o.destination_latitude,o.destination_longitude,o.notes,o.status,o.customer_ready,o.tracking_token,o.created_at,o.delivered_at,o.courier_id,c.name AS courier_name,l.latitude,l.longitude,l.accuracy_m,l.recorded_at,l.is_sharing FROM orders o LEFT JOIN couriers c ON c.id=o.courier_id LEFT JOIN delivery_locations l ON l.order_id=o.id WHERE o.demo_session_id IS NULL ORDER BY o.created_at DESC LIMIT 100",[])
     ]);
     return NextResponse.json({establishments,couriers,orders},{headers});
   } catch {return fail("Banco indisponível. Verifique DATABASE_URL.",503);}
@@ -49,7 +49,7 @@ export async function POST(req:Request) {
       if(!validUuid(body.courier_id))return fail("Entregador inválido");
       const token=Array.from(crypto.getRandomValues(new Uint8Array(32))).map(x=>x.toString(16).padStart(2,"0")).join("");
       const hash=await hashToken(token);
-      const couriers=await sql.query("SELECT id FROM couriers WHERE id=$1 AND establishment_id=$2 AND active=true",[body.courier_id,establishment_id]);
+      const couriers=await sql.query("SELECT id FROM couriers WHERE id=$1 AND establishment_id=$2 AND active=true AND demo_session_id IS NULL",[body.courier_id,establishment_id]);
       if(!couriers.length)return fail("Entregador não encontrado",404);
       await sql.query("INSERT INTO courier_access_tokens(courier_id,token_hash,revoked_at) VALUES($1,$2,NULL) ON CONFLICT(courier_id) DO UPDATE SET token_hash=excluded.token_hash,created_at=now(),revoked_at=NULL",[body.courier_id,hash]);
       return NextResponse.json({courier_url:new URL("/entregador/"+token,req.url).toString()},{headers});
@@ -60,7 +60,7 @@ export async function POST(req:Request) {
       const courier_id=body.courier_id||null;
       if(courier_id&&!validUuid(courier_id))return fail("Entregador inválido");
       if(courier_id) {
-        const c=await sql.query("SELECT id FROM couriers WHERE id=$1 AND establishment_id=$2 AND active=true",[courier_id,establishment_id]);
+        const c=await sql.query("SELECT id FROM couriers WHERE id=$1 AND establishment_id=$2 AND active=true AND demo_session_id IS NULL",[courier_id,establishment_id]);
         if(!c.length)return fail("Entregador não encontrado",404);
       }
       const rows=await sql.query("INSERT INTO orders(establishment_id,courier_id,customer_name,customer_phone,destination,notes) VALUES($1,$2,$3,$4,$5,$6) RETURNING id,tracking_token",[establishment_id,courier_id,customer_name,phone||null,destination,notes||null]);
@@ -68,20 +68,30 @@ export async function POST(req:Request) {
       return NextResponse.json({order:rows[0]}, {headers});
     }
     if(action==="assign") {
-      if(!validUuid(body.order_id)||!validUuid(body.courier_id))return fail("Pedido ou entregador inválido");
-      const c=await sql.query("SELECT id FROM couriers WHERE id=$1 AND establishment_id=$2 AND active=true",[body.courier_id,establishment_id]);
-      if(!c.length)return fail("Entregador não encontrado",404);
-      const rows=await sql.query("UPDATE orders SET courier_id=$1,updated_at=now() WHERE id=$2 AND establishment_id=$3 AND status IN ('preparing','on_route') RETURNING id",[body.courier_id,body.order_id,establishment_id]);
-      if(!rows.length)return fail("Não foi possível atribuir o pedido",409);
+      if(!validUuid(body.order_id))return fail("Pedido inválido");
+      const courierId=body.courier_id||null;
+      if(courierId&&!validUuid(courierId))return fail("Entregador inválido");
+      if(courierId){
+        const couriers=await sql.query("SELECT id FROM couriers WHERE id=$1 AND establishment_id=$2 AND active=true AND demo_session_id IS NULL",[courierId,establishment_id]);
+        if(!couriers.length)return fail("Entregador não encontrado",404);
+      }
+      const rows=await sql.query("UPDATE orders SET courier_id=$1,updated_at=now() WHERE id=$2 AND establishment_id=$3 AND demo_session_id IS NULL AND status='preparing' RETURNING id",[courierId,body.order_id,establishment_id]);
+      if(!rows.length)return fail("A atribuição só pode ser alterada antes da saída do entregador",409);
       await sql.query("DELETE FROM delivery_locations WHERE order_id=$1",[body.order_id]);
       return NextResponse.json({ok:true},{headers});
     }
     if(action==="status") {
-      if(!validUuid(body.order_id)||!["preparing","on_route","arrived","delivered","cancelled"].includes(body.status||""))return fail("Dados inválidos");
-      const rows=await sql.query("UPDATE orders SET status=$1,updated_at=now(),delivered_at=CASE WHEN $1='delivered' THEN now() ELSE delivered_at END WHERE id=$2 AND establishment_id=$3 RETURNING id",[body.status,body.order_id,establishment_id]);
-      if(!rows.length)return fail("Pedido não encontrado",404);
-      await sql.query("INSERT INTO delivery_updates(order_id,status,actor_type) VALUES($1,$2,'establishment')",[body.order_id,body.status]);
-      if(body.status==="delivered"||body.status==="cancelled")await sql.query("DELETE FROM delivery_locations WHERE order_id=$1",[body.order_id]);
+      if(!validUuid(body.order_id)||!["on_route","arrived","delivered","cancelled"].includes(body.status||""))return fail("Dados inválidos");
+      const existing=await sql.query("SELECT status,courier_id FROM orders WHERE id=$1 AND establishment_id=$2 AND demo_session_id IS NULL LIMIT 1",[body.order_id,establishment_id]);
+      if(!existing.length)return fail("Pedido não encontrado",404);
+      const previous=String(existing[0].status),next=body.status!;
+      const transitions:Record<string,string[]>={preparing:["on_route","cancelled"],on_route:["arrived","cancelled"],arrived:["delivered","cancelled"]};
+      if(!(transitions[previous]||[]).includes(next))return fail("Mudança de status não permitida",409);
+      if(next==="on_route"&&!existing[0].courier_id)return fail("Atribua um entregador antes de iniciar",409);
+      const rows=await sql.query("UPDATE orders SET status=$1,updated_at=now(),delivered_at=CASE WHEN $1='delivered' THEN now() ELSE delivered_at END WHERE id=$2 AND establishment_id=$3 AND demo_session_id IS NULL AND status=$4 RETURNING id",[next,body.order_id,establishment_id,previous]);
+      if(!rows.length)return fail("O status do pedido mudou em outro dispositivo",409);
+      await sql.query("INSERT INTO delivery_updates(order_id,status,actor_type) VALUES($1,$2,'establishment')",[body.order_id,next]);
+      if(next==="delivered"||next==="cancelled")await sql.query("DELETE FROM delivery_locations WHERE order_id=$1",[body.order_id]);
       return NextResponse.json({ok:true},{headers});
     }
     return fail("Ação desconhecida");

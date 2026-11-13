@@ -1,0 +1,39 @@
+name: Qualidade do Entrega Segura
+on:
+  push:
+    branches: [teste-deploy]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Instalar dependências
+        run: npm install --no-audit --no-fund
+      - name: Verificar TypeScript
+        run: npm run typecheck
+      - name: Compilar Next.js
+        run: npm run build
+
+  smoke:
+    name: Teste real do Worker e Neon
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Testar páginas, APIs e pedido de demonstração
+        env:
+          TEST_BASE_URL: https://entrega-segura2.miguellpitaa.workers.dev
+        run: npm run test:smoke

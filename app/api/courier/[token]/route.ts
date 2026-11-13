@@ -15,7 +15,7 @@ export async function GET(_req:Request,{params}:Context) {
   try {
     const courier=await courierFor((await params).token);
     if(!courier)return fail("Acesso inválido ou revogado",401);
-    const orders=await db().query("SELECT id,customer_name,destination,notes,status,customer_ready,created_at FROM orders WHERE courier_id=$1 AND status NOT IN ('delivered','cancelled') ORDER BY created_at DESC LIMIT 50",[courier.id]);
+    const orders=await db().query("SELECT id,customer_name,destination,destination_latitude,destination_longitude,tracking_token,notes,status,customer_ready,created_at FROM orders WHERE courier_id=$1 AND status NOT IN ('delivered','cancelled') ORDER BY created_at DESC LIMIT 50",[courier.id]);
     return NextResponse.json({courier,orders},{headers});
   }catch{return fail("Serviço indisponível",503);}
 }

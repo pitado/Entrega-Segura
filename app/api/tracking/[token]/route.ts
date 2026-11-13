@@ -21,9 +21,22 @@ export async function POST(request:Request,{params}:Context) {
   const token=(await params).token;
   if(!validUuid(token))return fail("Link inválido");
   const body=await request.json().catch(()=>({}));
-  if(body.action!=="ready")return fail("Ação inválida");
+  if(body.action!=="ready"&&body.action!=="destination")return fail("Ação inválida");
   try {
     const sql=db();
+    if(body.action==="destination"){
+      const lat=body.latitude,lng=body.longitude;
+      if(typeof lat!=="number"||!Number.isFinite(lat)||Math.abs(lat)>90||
+        typeof lng!=="number"||!Number.isFinite(lng)||Math.abs(lng)>180){
+        return fail("Coordenadas inválidas");
+      }
+      const rows=await sql.query(
+        "UPDATE orders SET destination_latitude=$1,destination_longitude=$2,updated_at=now() WHERE tracking_token=$3::uuid AND demo_session_id IS NULL AND created_at>now()-interval '7 days' AND status IN ('preparing','on_route','arrived') RETURNING id",
+        [lat,lng,token]);
+      if(!rows.length)return fail("Entrega não encontrada ou já finalizada",404);
+      await sql.query("INSERT INTO delivery_updates(order_id,status,actor_type) VALUES($1,'destination_confirmed','customer')",[rows[0].id]);
+      return NextResponse.json({ok:true},{headers});
+    }
     const updated=await sql.query("UPDATE orders SET customer_ready=true,updated_at=now() WHERE tracking_token=$1::uuid AND status IN ('on_route','arrived') AND customer_ready=false AND created_at>now()-interval '7 days' RETURNING id",[token]);
     if(updated.length)await sql.query("INSERT INTO delivery_updates(order_id,status,actor_type) VALUES($1,'customer_ready','customer')",[updated[0].id]);
     return NextResponse.json({ok:true,changed:updated.length>0},{headers});

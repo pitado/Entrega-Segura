@@ -106,6 +106,6 @@ export default function CourierConsole({token}:{token:string}){
         <p className="muted tiny">O GPS funciona apenas enquanto o navegador mantém a página ativa. Último envio: {lastSent||"nenhum"}.</p>
       </section>}
       <section className="data-panel padding-panel"><h3>Navegar até o destino</h3><p className="muted">{order.destination}</p><RouteLinks destination={dest} address={order.destination}/></section>
-    </main><aside><DeliveryMap courier={loc} destination={dest} address={order.destination} source={mode==="simulation"?"simulation":order.location_source} updatedAt={order.location_updated_at}/><section className="data-panel padding-panel"><h3>Acompanhamento</h3><p className="muted">Sua posição aparece no painel e no link do cliente enquanto o compartilhamento estiver ativo.</p></section></aside></div>}
+    </main><aside><DeliveryMap orderToken={token} courier={loc} destination={dest} address={order.destination} source={mode==="simulation"?"simulation":order.location_source} updatedAt={order.location_updated_at}/><section className="data-panel padding-panel"><h3>Acompanhamento</h3><p className="muted">Sua posição aparece no painel e no link do cliente enquanto o compartilhamento estiver ativo.</p></section></aside></div>}
     </div>;
 }
