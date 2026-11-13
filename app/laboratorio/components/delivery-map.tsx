@@ -12,8 +12,7 @@ export function RouteLinks({destination,address}:{destination?:Point|null;addres
 }
 export default function DeliveryMap({courier,destination,address,source,updatedAt}:Props){
   return <div className="lab-map-wrapper">
-    <MapSurface destination={address||""} latitude={courier?.lat??null} longitude={courier?.lng??null} updatedAt={updatedAt||null}/>
-    {source==="simulation"&&<p className="lab-caption">Posição simulada. Este deslocamento não representa um GPS real nem uma rota viária calculada.</p>}
-    <RouteLinks destination={destination} address={address}/>
+    <MapSurface destination={address||""} destinationLatitude={destination?.lat??null} destinationLongitude={destination?.lng??null} latitude={courier?.lat??null} longitude={courier?.lng??null} simulated={source==="simulation"} status={courier?"on_route":"preparing"} updatedAt={updatedAt||null}/>
+    
   </div>;
 }

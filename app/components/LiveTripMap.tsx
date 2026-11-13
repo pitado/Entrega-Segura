@@ -28,7 +28,8 @@ function badge(kind:"moto"|"dest"){
 }
 export default function LiveTripMap({origin,destination,destinationAddress="",routePoints,simulated=false,status="preparing",updatedAt,compact=false}:Props){
  const host=useRef<HTMLDivElement>(null);
- const m=useRef<any>(null),markers=useRef<any[]>([]),lines=useRef<any[]>([]),routeLock=useRef(0);
+ const m=useRef<any>(null),markers=useRef<any[]>([]),lines=useRef<any[]>([]);
+ const routeLock=useRef({at:0,key:""});
  const cachedDest=useRef<{address:string;point:MapPoint}|null>(null);
  const [config,setConfig]=useState<{googleKey:string|null}>({googleKey:null});
  const [backend,setBackend]=useState<"google"|"libre">("libre");
@@ -41,7 +42,7 @@ export default function LiveTripMap({origin,destination,destinationAddress="",ro
  useEffect(()=>{let cancel=false;fetch("/api/maps/config",{cache:"no-store"}).then(r=>r.json()).then(v=>{if(!cancel&&v.googleKey){setConfig(v);setBackend("google");}}).catch(()=>{});return()=>{cancel=true;};},[]);
  useEffect(()=>{
    let disposed=false;
-   setReady(false);m.current=null;markers.current=[];lines.current=[];routeLock.current=0;setError("");
+   setReady(false);m.current=null;markers.current=[];lines.current=[];routeLock.current={at:0,key:""};setError("");
    if(!host.current)return;
    host.current.replaceChildren();
    async function init(){
@@ -93,7 +94,9 @@ export default function LiveTripMap({origin,destination,destinationAddress="",ro
        else M.easeTo({center:ll(src),duration:450});
      }
      if(backend==="libre"){
-       const coordinates=(simulated&&routePoints?.length?routePoints:[src,end]).filter((x):x is MapPoint=>point(x)).map(ll);
+       const routeIndex=simulated&&src&&routePoints?.length?routePoints.findIndex(p=>p.lat===src.lat&&p.lng===src.lng):-1;
+       const visiblePoints=simulated&&routePoints?.length?routePoints.slice(Math.max(0,routeIndex)): [src,end];
+       const coordinates=visiblePoints.filter((x):x is MapPoint=>point(x)).map(ll);
        if(coordinates.length>1){
          const data={type:"Feature",properties:{},geometry:{type:"LineString",coordinates}};
          const existing=M.getSource("es-route");
@@ -102,14 +105,23 @@ export default function LiveTripMap({origin,destination,destinationAddress="",ro
        }
        if(simulated&&src&&routePoints?.length){
          const i=routePoints.findIndex(p=>p.lat===src.lat&&p.lng===src.lng);
-         setSummary({minutes:Math.ceil(Math.max(0,(routePoints.length-1-Math.max(i,0))*3)/60),km:null,real:false});
+         const remaining=routePoints.slice(Math.max(0,i));
+         let meters=0;
+         for(let j=1;j<remaining.length;j++){
+           const a=remaining[j-1],b=remaining[j],r=Math.PI/180;
+           const dLat=(b.lat-a.lat)*r,dLng=(b.lng-a.lng)*r;
+           const h=Math.sin(dLat/2)**2+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dLng/2)**2;
+           meters+=6371000*2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h));
+         }
+         setSummary({minutes:Math.max(0,Math.ceil(remaining.length*3/60)),km:Math.round(meters/100)/10,real:false});
        }else setSummary({minutes:null,km:null,real:false});
        return;
      }
      if(backend==="google"&&src&&end&&G){
        const n=Date.now();
-       if(n-routeLock.current<45000)return;
-       routeLock.current=n;
+       const placeKey=[end.lat.toFixed(4),end.lng.toFixed(4),src.lat.toFixed(3),src.lng.toFixed(3)].join(":");
+       if(routeLock.current.key===placeKey&&n-routeLock.current.at<45000)return;
+       routeLock.current={at:n,key:placeKey};
        void(async()=>{
          try{
            const lib=await G.importLibrary("routes");
@@ -119,7 +131,7 @@ export default function LiveTripMap({origin,destination,destinationAddress="",ro
            lines.current=result.routes[0].createPolylines();
            lines.current.forEach((l:any)=>{l.setOptions({strokeColor:"#426f84",strokeWeight:5,strokeOpacity:.9});l.setMap(M);});
            setSummary({minutes:Math.max(1,Math.ceil(result.routes[0].durationMillis/60000)),km:Math.round(result.routes[0].distanceMeters/100)/10,real:true});
-         }catch{if(!cancelled)setError("Para calcular rota e previsão, habilite a Routes API no Google Cloud.");}
+         }catch{if(!cancelled){setSummary({minutes:null,km:null,real:false});setError("A rota não pôde ser calculada. Verifique a Routes API e o faturamento do projeto Google.");}}
        })();
      }
    }
@@ -145,11 +157,12 @@ export default function LiveTripMap({origin,destination,destinationAddress="",ro
  const address=dest?dest.lat+","+dest.lng:destinationAddress;
  const external=(kind:"google"|"apple")=>kind==="google"?"https://www.google.com/maps/dir/?api=1&destination="+encodeURIComponent(address)+"&travelmode=driving":"https://maps.apple.com/?daddr="+encodeURIComponent(address)+"&dirflg=d";
  const eta=status==="delivered"?"Concluída":status==="arrived"?"Chegou":summary.minutes===null?"—":summary.minutes<1?"< 1 min":summary.minutes+" min";
+ const statusText=status==="delivered"?"Entrega finalizada":status==="arrived"?"No destino":status==="on_route"?"A caminho":status==="preparing"?"Aguardando saída":"Entrega";
  return <section className={"es-live-map"+(compact?" compact":"")}>
- <div className="es-map-head"><div><strong><Navigation size={16}/> {active?"Entrega em andamento":"Mapa da entrega"}</strong><small>{simulated?"Cenário de teste":updatedAt?"Última posição registrada":"Aguardando posição"}</small></div><span className="es-map-mode">{summary.real?"Google Routes":simulated?"Simulação":"Mapa interativo"}</span></div>
+ <div className="es-map-head"><div><strong><Navigation size={16}/> {statusText}</strong><small>{simulated?"Trajeto ilustrativo":updatedAt?"Posição do motoboy compartilhada":"Aguardando localização do motoboy"}</small></div><span className="es-map-mode">{simulated?"Teste":updatedAt?"Rastreando":"Aguardando GPS"}</span></div>
  <div className="es-map-scene"><div className="es-map-surface" ref={host}/><button type="button" className="es-map-center" onClick={center} aria-label="Centralizar mapa"><LocateFixed size={17}/></button>{!ready&&!error&&<div className="es-map-loading">Carregando mapa...</div>}</div>
  <div className="es-map-stats"><div><small>Chegada estimada</small><strong>{eta}</strong></div><div><small>Distância restante</small><strong>{summary.km!==null?summary.km.toLocaleString("pt-BR")+" km":"—"}</strong></div><div><small>Atualização</small><strong>{updatedAt?new Date(updatedAt).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}):simulated?"Em teste":"Sem GPS"}</strong></div></div>
- <div className="es-map-foot"><span>{summary.real?"Estimativa pelo Google · rota para automóvel":simulated?"Tempo apenas da simulação":"Tempo disponível com Google Routes e localização"}</span><div><a href={external("google")} target="_blank" rel="noopener noreferrer">Google Maps</a><a href={external("apple")} target="_blank" rel="noopener noreferrer">Apple Maps</a></div></div>
+ <div className="es-map-foot"><span>{summary.real?"Rota pelo Google · ETA para automóvel":simulated?"Distância e tempo ilustrativos":"A previsão aparece após localizar o entregador e o destino"}</span><div><a href={external("google")} target="_blank" rel="noopener noreferrer">Google Maps</a><a href={external("apple")} target="_blank" rel="noopener noreferrer">Apple Maps</a></div></div>
  {error&&<p className="es-map-issue" role="status"><MapPin size={13}/>{error}</p>}
  </section>;
 }

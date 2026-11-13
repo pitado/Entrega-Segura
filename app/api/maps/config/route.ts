@@ -1,9 +1,11 @@
 import {NextResponse} from "next/server";
 export const runtime="nodejs";
-export async function GET() {
-  // Both browser credentials must be restricted to the application domains in their providers.
-  return NextResponse.json({
-    googleKey:process.env.GOOGLE_MAPS_BROWSER_KEY||null,
-    appleToken:process.env.APPLE_MAPKIT_JS_TOKEN||null
-  },{headers:{"Cache-Control":"no-store"}});
+
+// Chaves de navegador ficam públicas por definição: restrinja a chave no Google Cloud
+// aos domínios autorizados e às APIs Maps JavaScript, Routes e Geocoding.
+// Nunca exponha tokens privados (Apple MapKit ou chaves de servidor) nesta rota.
+export async function GET(){
+ return NextResponse.json({googleKey:process.env.GOOGLE_MAPS_BROWSER_KEY||null},{
+   headers:{"Cache-Control":"no-store","Referrer-Policy":"no-referrer","X-Robots-Tag":"noindex"}
+ });
 }

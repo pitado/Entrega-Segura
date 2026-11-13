@@ -92,20 +92,20 @@ export default function CourierConsole({token}:{token:string}){
   const active=order&&["preparing","on_route","arrived"].includes(order.status);
   const dest=order?point(order.destination_latitude,order.destination_longitude):null;
   const loc=order?point(order.latitude,order.longitude):null;
-  return <div className="shell lab-driver"><header className="topbar"><a className="identity" href="/"><span className="identity-mark">ES</span><div><strong>Entrega Segura</strong><small>Área do entregador</small></div></a><span className="tag">Acesso individual</span></header>
-    <div className="workspace-title"><span className="eyebrow">ENTREGADOR</span><h1>Entrega em andamento</h1><p>Atualize o pedido e compartilhe a localização enquanto estiver na rua.</p></div>
+  return <div className="shell lab-driver"><header className="topbar"><a className="identity" href="/"><strong>Entrega Segura</strong></a></header>
+    <div className="workspace-title"><h1>Minha entrega</h1></div>
     {error&&<div className="notice error" role="alert">{error}</div>}
     {!order?<div className="setup-panel"><p>Carregando o pedido ou verificando acesso...</p></div>:
     <div className="driver-grid"><main className="driver-info"><section className="data-panel padding-panel"><div className="delivery-title"><span className="status-pill">{statuses[order.status]||order.status}</span><span className="muted tiny">Pedido #{order.id.slice(0,8).toUpperCase()}</span></div>
       <h2>{order.destination}</h2><p className="muted">Cliente: {order.customer_name}</p><div className="info-grid"><div><small>Recebimento</small><strong>{order.customer_ready?"Cliente confirmou que está pronto":"Confirmação pendente"}</strong></div><div><small>Compartilhamento</small><strong>{mode==="gps"?"GPS ativo":mode==="simulation"?"Simulação ativa":"Desligado"}</strong></div></div>
       <div className="actions"><h3>Etapa da viagem</h3>{order.status==="preparing"&&<button disabled={busy} className="button primary" onClick={()=>void status("on_route")}>Saiu para entrega</button>}{order.status==="on_route"&&<button disabled={busy} className="button primary" onClick={()=>void status("arrived")}>Cheguei ao destino</button>}{order.status==="arrived"&&<button disabled={busy} className="button primary" onClick={()=>void status("delivered")}>Confirmar entrega concluída</button>}{order.status==="delivered"&&<p className="notice success">Entrega concluída. O compartilhamento de posição foi encerrado.</p>}</div>
       </section>
-      {active&&<section className="data-panel padding-panel"><h3>Localização e teste de percurso</h3><p className="muted">Escolha entre sua localização real, com permissão do aparelho, ou um trajeto totalmente simulado em Maringá.</p>
+      {active&&<section className="data-panel padding-panel"><h3>Localização</h3>
         <div className="action-stack"><button className="button primary" onClick={()=>void gps()} disabled={busy||mode==="gps"}>Compartilhar meu GPS</button><button className="button outline" onClick={()=>void demo()} disabled={busy||mode==="simulation"}>Simular uma viagem de teste</button>{mode!=="off"&&<button className="button tertiary" onClick={stop}>Parar compartilhamento</button>}</div>
         {mode==="simulation"&&<p className="notice info">Viagem fictícia em execução: ponto {Math.min(step,route.length)} de {route.length}. Não é uma rota calculada pelas ruas.</p>}
         <p className="muted tiny">O GPS funciona apenas enquanto o navegador mantém a página ativa. Último envio: {lastSent||"nenhum"}.</p>
       </section>}
       <section className="data-panel padding-panel"><h3>Navegar até o destino</h3><p className="muted">{order.destination}</p><RouteLinks destination={dest} address={order.destination}/></section>
-    </main><aside><DeliveryMap courier={loc} destination={dest} address={order.destination} source={mode==="simulation"?"simulation":order.location_source} updatedAt={order.location_updated_at}/><section className="data-panel padding-panel"><h3>Como testar</h3><p className="muted">Abra o link do cliente em outro celular e inicie uma viagem simulada aqui. O status e a posição serão atualizados automaticamente na outra tela.</p></section></aside></div>}
-    <footer className="app-footer"><span>Entrega Segura · Ambiente demonstrativo</span><span>Não use dados de clientes reais.</span></footer></div>;
+    </main><aside><DeliveryMap courier={loc} destination={dest} address={order.destination} source={mode==="simulation"?"simulation":order.location_source} updatedAt={order.location_updated_at}/><section className="data-panel padding-panel"><h3>Acompanhamento</h3><p className="muted">Sua posição aparece no painel e no link do cliente enquanto o compartilhamento estiver ativo.</p></section></aside></div>}
+    </div>;
 }

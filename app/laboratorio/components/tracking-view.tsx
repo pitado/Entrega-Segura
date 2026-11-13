@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import DeliveryMap, { Point } from "./delivery-map";
 import "../lab.css";
 type Tracking={id:string;status:string;customer_ready:boolean;customer_ready_at:string|null;
-  destination:string;destination_latitude:number|null;destination_longitude:number|null;
+  courier_name:string|null;destination:string;destination_latitude:number|null;destination_longitude:number|null;
   latitude:number|null;longitude:number|null;location_updated_at:string|null;location_source:string|null;created_at:string;delivered_at:string|null};
 const steps=[{code:"preparing",title:"Em preparação"},{code:"on_route",title:"Saiu para entrega"},{code:"arrived",title:"Entregador chegou"},{code:"delivered",title:"Entrega concluída"}];
 const pos=(lat:number|null,lng:number|null):Point|null=>lat!==null&&lng!==null?{lat,lng}:null;
@@ -40,15 +40,15 @@ export default function TrackingView({token}:{token:string}){
   }
   const stage=steps.findIndex(s=>s.code===data?.status);
   return <div className="shell lab-customer">
-    <header className="topbar"><a className="identity" href="/"><span className="identity-mark">ES</span><div><strong>Entrega Segura</strong><small>Acompanhamento de pedido</small></div></a><span className="tag">Link individual</span></header>
-    <div className="workspace-title"><span className="eyebrow">ACOMPANHAMENTO</span><h1>Seu pedido, em cada etapa</h1><p>As informações são atualizadas automaticamente enquanto a entrega está em andamento.</p></div>
+    <header className="topbar"><a className="identity" href="/"><strong>Entrega Segura</strong></a></header>
+    <div className="workspace-title"><h1>Sua entrega</h1></div>
     {error&&<div className="notice error" role="alert">{error}</div>}
     {data?<div className="tracking-grid"><section className="tracking-main"><DeliveryMap courier={pos(data.latitude,data.longitude)} destination={pos(data.destination_latitude,data.destination_longitude)} address={data.destination} source={data.location_source} updatedAt={data.location_updated_at}/>
-      <div className="tracking-update"><span className="live-dot"/> Atualizado às {last||"—"} · a cada 5 segundos</div>
+      <div className="tracking-update"><span className="live-dot"/> {data.location_updated_at?"Motoboy localizado · ":data.status==="on_route"?"Aguardando sinal · ":"Última consulta · "} {last||"—"}</div>
       {data.status==="on_route"&&!data.latitude&&<div className="notice info">O entregador está em rota, mas ainda não compartilhou uma posição recente.</div>}
       {data.status==="delivered"&&<div className="notice success">Pedido entregue. O rastreamento de localização foi encerrado.</div>}
     </section>
-    <aside className="data-panel tracking-details"><div className="tracking-heading"><span className="eyebrow">SITUAÇÃO ATUAL</span><h2>{steps[stage]?.title||"Acompanhamento"}</h2><p className="muted">Destino: {data.destination}</p></div>
+    <aside className="data-panel tracking-details"><div className="tracking-heading"><h2>{steps[stage]?.title||"Acompanhamento"}</h2><p className="muted">{data.destination}</p>{data.courier_name&&<p className="muted">Entregador: {data.courier_name}</p>}</div>
       <ol className="timeline">{steps.map((s,i)=><li key={s.code} className={i<=stage?"done":""}><span className="timeline-point"/><div><strong>{s.title}</strong><small>{i<stage?"Concluído":i===stage?"Em andamento":"Aguardando"}</small></div></li>)}</ol>
       {!["delivered","cancelled"].includes(data.status)&&<div className="ready-card"><strong>Você estará pronto para receber?</strong><p className="muted">Informe ao entregador que pode receber o pedido assim que ele chegar.</p>
         <button className="button primary full" disabled={busy||data.customer_ready} onClick={()=>void post({action:"ready"})}>{data.customer_ready?"Recebimento pronto confirmado":"Estou pronto para receber"}</button>
@@ -56,8 +56,8 @@ export default function TrackingView({token}:{token:string}){
         <strong>Confirmar meu ponto de entrega</strong><p className="muted tiny">Opcional. Compartilha sua posição atual apenas para este pedido, após permissão do navegador.</p>
         <button className="button outline full" disabled={busy} onClick={shareLocation}>Usar minha localização como destino</button>
       </div>}
-      <p className="muted tiny">Esta é uma demonstração. Não há pagamento, cashback financeiro, previsão de chegada automática ou mensagens de WhatsApp nesta versão.</p>
+      
     </aside></div>:<div className="setup-panel">Carregando acompanhamento do pedido...</div>}
-    <footer className="app-footer"><span>Entrega Segura · Acompanhamento individual</span><span>Não compartilhe este link publicamente.</span></footer>
+    
   </div>;
 }

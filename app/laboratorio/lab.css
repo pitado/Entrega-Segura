@@ -76,3 +76,37 @@
 .lab-customer .live-dot{height:7px;width:7px;border-radius:50%;background:#51886b;display:block}
 @media(max-width:970px){.lab-grid,.lab-driver .driver-grid,.lab-customer .tracking-grid{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:650px){.lab-page .lab-start{display:block;padding:19px}.lab-start .button{margin-top:16px;width:100%}.lab-form-footer{display:block}.lab-form-footer .button{margin-top:12px;width:100%}.lab-link-row{flex-wrap:wrap}.lab-link-row .button{font-size:10px;padding:10px;flex:1}.lab-add-courier{flex-direction:column}.lab-add-courier .button{width:100%}.lab-driver .workspace-title,.lab-customer .workspace-title{padding:27px 15px 13px}.lab-driver .workspace-title h1,.lab-customer .workspace-title h1{font-size:28px}.lab-driver .driver-grid,.lab-customer .tracking-grid{padding:10px 14px 32px}.lab-driver .padding-panel,.lab-customer .tracking-details{padding:17px}.lab-driver .action-stack{display:grid}.lab-driver .action-stack .button{width:100%}.lab-driver .info-grid{grid-template-columns:1fr}.lab-driver .app-footer,.lab-customer .app-footer{padding:16px 15px;display:block}.lab-driver .app-footer span,.lab-customer .app-footer span{display:block;margin:4px 0}}
+
+
+/* Laboratório: mesma linguagem visual das páginas públicas */
+.lab-page .page-title>div>p{display:none}
+.lab-page .section-top>div>p{display:none}
+.lab-page .overline{display:none}
+.lab-page .kpi>span{display:none}
+.lab-page .lab-detail .map-topline{display:none}
+.lab-page .lab-detail .es-live-map{margin-top:19px}
+.lab-page .lab-safety-note{color:#94a2a8;font-size:10px;margin-top:22px;line-height:1.55}
+.lab-driver .identity,.lab-customer .identity{font-size:16px;font-weight:750;letter-spacing:-.035em;color:#273b45}
+.lab-driver .identity-mark,.lab-customer .identity-mark{display:none!important}
+.lab-driver .workspace-title h1,.lab-customer .workspace-title h1{font-size:29px}
+.lab-driver .workspace-title>p,.lab-customer .workspace-title>p{display:none}
+.lab-driver .tracking-grid,.lab-customer .tracking-grid{gap:18px}
+.lab-customer .tracking-main,.lab-driver .driver-info{min-width:0}
+.lab-customer .tracking-update{font-size:10px;padding:8px 3px}
+.lab-customer .tracking-details{min-width:0}
+.lab-customer .tracking-heading h2{font-size:22px}
+.lab-driver .info-grid strong{line-height:1.5}
+.lab-driver .action-stack{margin-top:14px}
+.lab-driver .padding-panel h3{font-size:13px}
+.lab-driver .es-live-map,.lab-customer .es-live-map{margin-bottom:16px}
+@media(max-width:970px){.lab-customer .tracking-grid .tracking-main{order:-1}.lab-driver .driver-grid aside{order:-1}}
+@media(max-width:650px){
+ .lab-driver .workspace-title,.lab-customer .workspace-title{padding:18px 16px 10px}
+ .lab-driver .workspace-title h1,.lab-customer .workspace-title h1{font-size:26px}
+ .lab-driver .driver-grid,.lab-customer .tracking-grid{padding:8px 14px 32px;gap:11px}
+ .lab-driver .es-map-scene,.lab-customer .es-map-scene{height:clamp(310px,43vh,420px)}
+ .lab-page .lab-detail{padding:16px}
+ .lab-page .lab-detail .es-map-stats>div{padding:12px 9px}
+ .lab-page .lab-share{margin-top:11px;padding:13px 0}
+ .lab-page .lab-link-row{gap:6px}
+}

@@ -1,5 +1,6 @@
 "use client";
-import {useEffect,useMemo,useState} from "react";
+import {useEffect,useState} from "react";
+import LiveTripMap from "../components/LiveTripMap";
 import Link from "next/link";
 import {ArrowRight,Check,Clipboard,MapPin,Navigation,Pause,Play,RefreshCw,Route,Shield,Truck,Warehouse} from "lucide-react";
 type Status="preparing"|"on_route"|"arrived"|"delivered";
@@ -11,6 +12,7 @@ const route=[
  [-23.42458,-51.93272],[-23.42396,-51.93205],[-23.42340,-51.93125],[-23.42281,-51.93054],
  [-23.42218,-51.92980],[-23.42154,-51.92915],[-23.42083,-51.92850],[-23.42018,-51.92776]
 ];
+const demoRoute=route.map(([lat,lng])=>({lat,lng}));
 const newDemo=():Demo=>({customer:"Ana Costa",destination:"Região central, Maringá - PR (destino ilustrativo)",courier:"Lucas",status:"preparing",ready:false,sharing:false,step:0,updatedAt:new Date().toISOString()});
 const names:Record<Status,string>={preparing:"Em preparo",on_route:"Em rota",arrived:"No destino",delivered:"Entregue"};
 function safe(v:unknown):Demo{
@@ -51,16 +53,15 @@ export default function DemoPage(){
  },[ready,demo.status,demo.sharing]);
  const move=(patch:Partial<Demo>)=>setDemo(d=>({...d,...patch,updatedAt:new Date().toISOString()}));
  const point=route[demo.step],lat=point[0],lng=point[1];
- const osm=useMemo(()=>{const delta=.014;const params=new URLSearchParams({bbox:[lng-delta,lat-delta,lng+delta,lat+delta].join(","),layer:"mapnik",marker:lat+","+lng});return "https://www.openstreetmap.org/export/embed.html?"+params.toString();},[lat,lng]);
  const copy=async(v:View)=>{const url=new URL("/demo",window.location.origin);url.searchParams.set("view",v);try{await navigator.clipboard.writeText(url.toString());setCopyFeedback("Link copiado");}catch{setCopyFeedback(url.toString());}setTimeout(()=>setCopyFeedback(""),4500);};
  const switchView=(v:View)=>{setView(v);window.history.replaceState(null,"","/demo?view="+v);};
- return <div className="shell"><header className="topbar"><Link href="/" className="wordmark"><span className="wordmark-symbol">ES</span><span>Entrega Segura<small>Operação de entregas</small></span></Link><span className="version-pill">AMBIENTE DE TESTE</span></header>
+ return <div className="shell"><header className="topbar"><Link href="/" className="wordmark"><span>Entrega Segura</span></Link></header>
  <main className="app-content demo-content">
- <div className="page-title"><div><h1>Painel de entregas</h1><p>Gerencie pedidos e acompanhe cada etapa da entrega.</p></div><button className="button ghost-button" onClick={()=>{setDemo(newDemo());setCopyFeedback("Simulação reiniciada");}}><RefreshCw size={16}/> Reiniciar</button></div>
- <div className="es-demo-online"><span>Deseja acompanhar em mais de um celular?</span><Link href="/laboratorio">Abrir teste conectado</Link></div>
+ <div className="page-title"><div><h1>Painel de entregas</h1></div><button className="button ghost-button" onClick={()=>{setDemo(newDemo());setCopyFeedback("Simulação reiniciada");}}><RefreshCw size={16}/> Reiniciar</button></div>
+ <div className="es-demo-online"><span>Testar entre celulares</span><Link href="/laboratorio">Abrir teste conectado</Link></div>
  <nav className="demo-nav" aria-label="Selecionar papel"><button className={view==="merchant"?"active":""} onClick={()=>switchView("merchant")}><Warehouse size={16}/> Estabelecimento</button><button className={view==="courier"?"active":""} onClick={()=>switchView("courier")}><Truck size={16}/> Entregador</button><button className={view==="customer"?"active":""} onClick={()=>switchView("customer")}><MapPin size={16}/> Consumidor</button></nav>
  <div className={"demo-grid"+(demo.status==="on_route"?" trip-active":"")} data-view={view}><section className="detail-panel demo-details">
- <div className="section-top"><div><span className="overline">PEDIDO</span><h2>#1042</h2></div><span className={"status-tag status-"+demo.status}>{names[demo.status]}</span></div>
+ <div className="section-top"><div><h2>#1042</h2></div><span className={"status-tag status-"+demo.status}>{names[demo.status]}</span></div>
  {view==="merchant"&&<><p>Configure os dados do pedido e acompanhe a operação pelos três painéis.</p><div className="form-grid"><div><label>Nome do cliente</label><input value={name} onChange={e=>setName(e.target.value)} maxLength={90}/></div><div><label>Entregador</label><input value={courierName} onChange={e=>setCourierName(e.target.value)} maxLength={90}/></div></div><button className="button main-button" onClick={()=>setDemo({...newDemo(),customer:name.trim()||"Cliente teste",courier:courierName.trim()||"Entregador teste"})}>Criar novo pedido <ArrowRight size={15}/></button>
  <div className="divider-line"/><div className="details-pair"><span>Cliente</span><strong>{demo.customer}</strong></div><div className="details-pair"><span>Entregador</span><strong>{demo.courier}</strong></div><div className="details-pair"><span>Cliente pronto</span><strong>{demo.ready?"Confirmado":"Aguardando"}</strong></div><div className="details-pair"><span>Posição compartilhada</span><strong>{demo.sharing?"Simulação ativa":"Não"}</strong></div>
  <div className="share-tools"><button className="button ghost-button" onClick={()=>copy("courier")}><Clipboard size={15}/> Link da tela do entregador</button><button className="button ghost-button" onClick={()=>copy("customer")}><Clipboard size={15}/> Link do cliente</button></div></>}
@@ -70,11 +71,11 @@ export default function DemoPage(){
  {demo.status==="arrived"&&<button className="button main-button" onClick={()=>move({status:"delivered",sharing:false})}><Check size={16}/> Finalizar entrega</button>}
  {demo.status==="delivered"&&<p className="notice">Entrega de teste concluída. Reinicie a viagem para repetir.</p>}</div>
  <div className="info-line"><Shield size={15}/><span>Na entrega real, o GPS só começa após permissão do dispositivo. Aqui o deslocamento é simulado, sem coletar sua localização.</span></div></>}
- {view==="customer"&&<><span className="overline">ACOMPANHAMENTO DO PEDIDO</span><h2 className="tracking-headline">{demo.status==="preparing"?"Estamos preparando o pedido":demo.status==="on_route"?"Sua entrega está a caminho":demo.status==="arrived"?"O entregador chegou":"Seu pedido foi entregue"}</h2><p>Entregador: {demo.courier}.</p><div className="timeline">{(["preparing","on_route","arrived","delivered"] as Status[]).map((s,i)=>{const current=(["preparing","on_route","arrived","delivered"] as Status[]).indexOf(demo.status);return <div key={s} className={"timeline-step "+(i<=current?"complete":"")}><div className="timeline-dot">{i<current?<Check size={12}/>:i+1}</div><div><strong>{names[s]}</strong><small>{i<=current?"Etapa registrada":"Aguardando"}</small></div></div>})}</div>
+ {view==="customer"&&<><h2 className="tracking-headline">{demo.status==="preparing"?"Estamos preparando o pedido":demo.status==="on_route"?"Sua entrega está a caminho":demo.status==="arrived"?"O entregador chegou":"Seu pedido foi entregue"}</h2><p>Entregador: {demo.courier}.</p><div className="timeline">{(["preparing","on_route","arrived","delivered"] as Status[]).map((s,i)=>{const current=(["preparing","on_route","arrived","delivered"] as Status[]).indexOf(demo.status);return <div key={s} className={"timeline-step "+(i<=current?"complete":"")}><div className="timeline-dot">{i<current?<Check size={12}/>:i+1}</div><div><strong>{names[s]}</strong><small>{i<=current?"Etapa registrada":"Aguardando"}</small></div></div>})}</div>
  <div className="customer-ready"><div><strong>Está pronto para receber?</strong><p>Confirme para que o entregador e o estabelecimento vejam a informação.</p></div><button className="button main-button" disabled={demo.ready||demo.status==="delivered"} onClick={()=>move({ready:true})}>{demo.ready?"Confirmado":"Estou pronto para receber"}</button></div></>}
  </section>
- <section className="demo-map-panel"><div className="map-topline"><div className="map-heading"><Route size={17}/><strong>Trajeto em teste</strong></div><span className="status-tag status-on_route">Posição fictícia</span></div><div className="map-stage demo-map-stage"><iframe title="Mapa de demonstração OpenStreetMap" src={osm} loading="lazy" referrerPolicy="strict-origin-when-cross-origin"/></div><div className="map-bottom"><div className="map-location"><Navigation size={15}/><span>Ponto {demo.step+1} de {route.length} · {demo.sharing?"Movimento em execução":"Parado"}</span></div><span className="map-credit">Mapa: OpenStreetMap</span></div><div className="demo-progress"><div style={{width:((demo.step/(route.length-1))*100)+"%"}}/></div><p className="map-disclaimer">O percurso e a localização são ilustrativos. Ao configurar Google Maps ou Apple MapKit, o acompanhamento real usa o provedor selecionado.</p><div className="share-tools"><a href={"https://www.google.com/maps/search/?api=1&query="+lat+","+lng} target="_blank" rel="noreferrer" className="button ghost-button">Ver ponto no Google Maps</a><a href={"https://maps.apple.com/?ll="+lat+","+lng} target="_blank" rel="noreferrer" className="button ghost-button">Ver ponto no Apple Maps</a></div></section></div>
+ <section className="demo-map-panel es-demo-map-panel"><LiveTripMap origin={{lat,lng}} destination={demoRoute[demoRoute.length-1]} routePoints={demoRoute} simulated status={demo.status} updatedAt={demo.updatedAt}/></section></div>
  {copyFeedback&&<div className="toast-panel" role="status"><Check size={16}/>{copyFeedback}</div>}
- <div className="notice"><strong>Como testar:</strong> entre na aba Entregador e inicie a viagem; depois abra Consumidor para confirmar o recebimento. Pode manter as páginas em abas diferentes do mesmo navegador. Este link de demonstração não sincroniza dados entre aparelhos; links reais usam o backend.</div>
+ <div className="es-demo-guide">Esta viagem é fictícia e fica salva neste navegador. Para acompanhar em outro celular, use o <Link href="/laboratorio">teste conectado</Link>.</div>
  </main></div>;
 }

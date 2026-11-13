@@ -52,3 +52,48 @@
 }
 
 .es-demo-online{display:flex;align-items:center;justify-content:space-between;gap:13px;flex-wrap:wrap;padding:11px 15px;border:1px solid #dfe6e9;border-radius:8px;background:#fff;margin-bottom:19px;font-size:12px;color:#657985}.es-demo-online a{font-weight:700;color:#456d7b;text-decoration:underline;text-underline-offset:3px}
+
+
+/* Cabeçalho neutro, sem símbolo de marca e sem subtítulos decorativos */
+.wordmark{font-size:17px;letter-spacing:-.04em;font-weight:750;color:#253b45}
+.wordmark-symbol,.wordmark small{display:none!important}
+.topbar>.version-pill:empty{display:none}
+.workplace-name{font-size:11px;color:#78919c;font-weight:650;display:block;margin-bottom:8px}
+.es-demo-online{margin-bottom:16px;padding:11px 14px;border-radius:8px}
+.es-demo-guide{max-width:850px;margin:24px auto 0;color:#83969e;font-size:11px;line-height:1.6}
+.es-demo-guide a{color:#3e6e7c;text-decoration:underline;text-underline-offset:3px}
+.gps-hint{font-size:11px;color:#84979d;line-height:1.55;margin:13px 0 0}
+.map-live-state{margin-top:12px;padding:11px 14px;background:#fff;border:1px solid #e4e9ec;border-radius:8px;display:flex;align-items:center;gap:9px;flex-wrap:wrap;color:#728690;font-size:11px}
+.map-live-state strong{color:#355766;font-size:11px}
+.signal-dot{height:8px;width:8px;background:#a2b3b9;border-radius:50%;display:inline-block;flex:0 0 8px}
+.signal-dot.active{background:#328b70;box-shadow:0 0 0 3px #e6f3ec}
+.es-live-map{border-radius:13px;overflow:hidden;border-color:#dce5e9}
+.es-map-head>div>strong{font-size:14px}
+.es-map-stats strong{font-variant-numeric:tabular-nums}
+.es-map-mode{background:#f1f6f7;color:#547680}
+.tracking-headline{letter-spacing:-.035em}
+@media(max-width:980px){
+ .tracking-grid>.tracking-map{order:-1}
+ .courier-grid>.courier-detail{order:-1}
+}
+@media(max-width:650px){
+ .topbar{height:60px}
+ .wordmark{font-size:17px}
+ .tracking-shell,.courier-shell{padding-top:18px}
+ .tracking-grid,.courier-grid{gap:13px}
+ .tracking-map{margin-bottom:2px}
+ .es-map-scene{height:clamp(315px,46vh,440px)}
+ .es-map-head{padding:12px 14px}
+ .es-map-stats>div{padding:13px 11px}
+ .es-map-stats small{font-size:10px}
+ .es-map-stats strong{font-size:17px}
+ .es-map-foot{flex-direction:column;gap:9px}
+ .es-map-foot>div{width:100%;justify-content:space-between;gap:15px}
+ .map-live-state{margin-top:10px}
+ .demo-grid>.es-demo-map-panel{min-width:0}
+ .demo-grid[data-view="customer"]>.es-demo-map-panel,
+ .demo-grid[data-view="courier"].trip-active>.es-demo-map-panel{order:-1}
+ .demo-map-panel .es-map-scene{height:clamp(310px,46vh,430px)}
+ .demo-grid[data-view="customer"] .demo-details,
+ .demo-grid[data-view="courier"] .demo-details{margin-top:0}
+}
