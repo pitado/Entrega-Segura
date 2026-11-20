@@ -280,3 +280,68 @@
  .es4-lab .es4-lab-kpis .kpi{min-height:133px}
  .es4-lab .es4-lab-kpis .kpi strong{font-size:34px}
 }
+
+/* V4 establishment dashboard: actual two-part hero and filterable quick statuses */
+.es4-admin .es4-admin-board{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(275px,.55fr);gap:14px;margin-bottom:13px}
+.es4-admin-board-blue{min-height:285px;background:#9db9fa;border:1px solid #89a5ee;border-radius:32px;position:relative;overflow:hidden;padding:29px 30px;display:flex;align-items:center;isolation:isolate}
+.es4-admin-board-blue:before{content:"";width:230px;height:230px;position:absolute;border-radius:50%;border:40px solid #ffffff70;right:-90px;top:-140px;z-index:-1}
+.es4-admin-board-blue>div{position:relative;z-index:2;width:57%}
+.es4-admin-board-blue h2{font-size:clamp(29px,3vw,48px);letter-spacing:-.07em;line-height:1.01;margin:17px 0 10px;font-weight:950}
+.es4-admin-board-blue h2 span{color:#fff}
+.es4-admin-board-blue p{font-size:12px;line-height:1.65;color:#344364;max-width:320px;font-weight:650}
+.es4-admin-board-blue .es4-pill.es4-black-pill{margin-top:16px}
+.es4-admin-board-art{position:absolute;width:49%;max-width:380px;right:-11px;bottom:4px}
+.es4-admin-board-black{min-height:285px;background:#111;color:#fff;border-radius:32px;padding:26px;display:flex;flex-direction:column;overflow:hidden;position:relative}
+.es4-admin-board-black:after{content:"✳";position:absolute;font-size:135px;right:-24px;top:-23px;color:#ffffff0b;line-height:1}
+.es4-admin-board-black .es4-kicker{position:relative;z-index:1;color:#b4bcd1;display:flex;align-items:center;justify-content:space-between}
+.es4-admin-board-black .es4-kicker span{color:#fda958;font-size:18px}
+.es4-board-count{font-size:clamp(66px,7vw,92px);font-weight:950;letter-spacing:-.088em;line-height:.91;margin:27px 0 8px;position:relative;z-index:1}
+.es4-admin-board-black h3{font-size:13px;font-weight:850;margin:0 0 5px}
+.es4-admin-board-black>p{font-size:10px;color:#bbbcca;margin:0}
+.es4-board-bottom{margin-top:auto;border-top:1px solid #484851;padding-top:15px;display:flex;gap:18px;align-items:center}
+.es4-board-bottom>div:not(.es4-board-icon){display:flex;flex-direction:column;gap:5px}
+.es4-board-bottom small{font-size:9px;color:#b4b6c6;letter-spacing:.09em;font-weight:850}
+.es4-board-bottom strong{font-size:22px;letter-spacing:-.055em;font-weight:950}
+.es4-board-icon{display:grid;place-items:center;margin-left:auto;min-width:43px;height:43px;border-radius:50%;background:#e9a1f0;color:#111}
+.es4-admin .es4-admin-metrics{grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-bottom:27px}
+.es4-admin .es4-admin-metrics .kpi{min-height:153px;border-radius:25px;border:0;padding:20px 20px}
+.es4-admin .es4-admin-metrics .kpi strong{font-size:clamp(34px,3.7vw,49px);margin:19px 0 6px}
+.es4-admin .es4-admin-metrics .kpi small{font-size:10px;line-height:1.4}
+.es4-admin-statusbar{display:flex;align-items:end;justify-content:space-between;gap:16px;margin:3px 0 15px;flex-wrap:wrap}
+.es4-admin-statusbar h2{font-size:28px;letter-spacing:-.055em;line-height:1.2;font-weight:950;margin:5px 0 0}
+.es4-admin-statusbar h2 span{color:#8da5eb}
+.es4-admin-status-buttons{display:flex;gap:7px;flex-wrap:wrap}
+.es4-admin-status-buttons button{min-height:39px;border-radius:99px;background:#fff;border:1px solid #e5e7ed;padding:8px 12px;display:inline-flex;align-items:center;gap:8px;color:#111;font-size:11px;font-weight:800}
+.es4-admin-status-buttons button.is-on{background:#111;border-color:#111;color:#fff}
+.es4-admin-status-buttons button span{border-radius:50%;background:#9db9fa;color:#111;min-width:22px;height:22px;padding:0 5px;display:grid;place-items:center;font-size:10px}
+.es4-admin .es4-admin-workspace .order-panel .section-top{align-items:center}
+.es4-header-demo{display:inline-flex;align-items:center;gap:5px;background:#9db9fa!important;color:#111!important}
+.es4-entry-intro .es4-entry-illustration{border:1.5px solid #111}
+.home-entry .entry-card{border-radius:30px!important;padding:31px}
+.home-entry .entry-card h2{font-size:25px}
+.home-entry .entry-card input{border-radius:15px;min-height:50px}
+.home-entry .entry-card .button.main-button{min-height:49px;border-radius:99px}
+.home-entry .entry-links a{border-radius:25px;min-height:140px}
+@media(max-width:1100px){
+ .es4-admin .es4-admin-board{grid-template-columns:minmax(0,1.2fr) minmax(235px,.8fr)}
+ .es4-admin-board-blue h2{font-size:35px}
+ .es4-admin .es4-admin-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:700px){
+ .es4-admin .es4-admin-board{display:flex;flex-direction:column;gap:10px}
+ .es4-admin-board-blue{min-height:240px;padding:22px;border-radius:26px}
+ .es4-admin-board-blue>div{width:67%}
+ .es4-admin-board-blue h2{font-size:29px}
+ .es4-admin-board-blue p{font-size:10px}
+ .es4-admin-board-art{width:46%;right:-20px;bottom:8px}
+ .es4-admin-board-black{min-height:162px;border-radius:26px;padding:19px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:center;gap:2px 10px}
+ .es4-admin-board-black .es4-kicker{grid-column:1/-1}
+ .es4-board-count{font-size:54px;margin:4px 0 0}
+ .es4-admin-board-black h3{font-size:12px;margin:0}
+ .es4-admin-board-black>p{grid-column:2;grid-row:2;font-size:10px}
+ .es4-board-bottom{grid-column:1/-1;margin-top:5px;padding-top:9px}
+ .es4-board-bottom strong{font-size:17px}
+ .es4-admin-statusbar{align-items:stretch;flex-direction:column;gap:10px}
+ .es4-admin-status-buttons{overflow-x:auto;max-width:100%;flex-wrap:nowrap;padding-bottom:3px}
+ .es4-admin-status-buttons button{flex:none;font-size:10px}
+}
