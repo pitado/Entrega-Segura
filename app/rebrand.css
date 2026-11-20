@@ -331,3 +331,42 @@ label{color:#111;font-size:12px;font-weight:800}
  .title-actions .button{font-size:9px}
 }
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{transition-duration:.01ms!important;animation-duration:.01ms!important;scroll-behavior:auto!important}}
+
+/* Entrada da demonstração — visual editorial em 2D com cores chapadas. */
+.es-demo-banner{
+  display:flex;align-items:center;justify-content:space-between;position:relative;
+  min-height:185px;border-radius:32px;background:var(--es-blue);overflow:hidden;
+  margin:0 0 16px;padding:28px 34px;gap:12px;isolation:isolate
+}
+.es-demo-banner:before{
+  content:"";position:absolute;width:190px;height:190px;border:31px solid #FFFFFF8A;
+  border-radius:50%;right:185px;top:-150px;z-index:-1
+}
+.es-demo-banner:after{content:"✳";position:absolute;right:20px;top:10px;color:#111;font-size:27px}
+.es-demo-copy{max-width:60%;position:relative;z-index:1}
+.es-demo-kicker{
+  display:inline-flex;border-radius:99px;padding:8px 13px;
+  font-size:10px;font-weight:900;letter-spacing:.04em;
+  background:#fff;color:#111
+}
+.es-demo-copy h2{
+  font-size:clamp(24px,3vw,38px);letter-spacing:-.06em;
+  font-weight:900;line-height:1.1;color:#111;margin:12px 0 8px
+}
+.es-demo-copy p{font-weight:600;font-size:12px;color:#263556;line-height:1.55;margin:0}
+.es-demo-illustration{flex:0 1 36%;max-width:340px;align-self:stretch;display:grid;place-items:center;transform:translateY(12px)}
+.es-demo-illustration svg{display:block;width:100%;max-height:190px}
+@media(max-width:700px){
+  .es-demo-banner{min-height:168px;border-radius:26px;margin-bottom:12px;padding:20px 19px}
+  .es-demo-copy{max-width:69%}
+  .es-demo-kicker{font-size:8px;padding:7px 9px}
+  .es-demo-copy h2{font-size:23px;margin:10px 0 6px}
+  .es-demo-copy p{font-size:10px;line-height:1.45}
+  .es-demo-illustration{flex:0 0 38%;transform:translate(18px,12px)}
+  .es-demo-illustration svg{width:166px;max-width:none}
+}
+@media(max-width:390px){
+  .es-demo-copy{max-width:72%}
+  .es-demo-copy h2{font-size:21px}
+  .es-demo-illustration svg{width:145px}
+}
