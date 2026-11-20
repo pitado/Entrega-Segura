@@ -1,4 +1,5 @@
 import "./style.css";
+import "./rebrand.css";
 import type {Metadata} from "next";
 export const metadata:Metadata={
  title:{default:"Entrega Segura",template:"%s | Entrega Segura"},
