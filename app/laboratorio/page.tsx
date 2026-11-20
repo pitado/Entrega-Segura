@@ -3,6 +3,7 @@ import {useCallback,useEffect,useState} from "react";
 import Link from "next/link";
 import {ArrowRight,Check,Clipboard,MapPin,Plus,RefreshCw,Route,Truck,Warehouse} from "lucide-react";
 import MapSurface from "../components/MapSurface";
+import {EditorialArt} from "../components/EditorialArt";
 import "./lab.css";
 type Courier={id:string;name:string;active:boolean};
 type Order={id:string;customer_name:string;destination:string;status:string;customer_ready:boolean;tracking_token:string;courier_access_token:string;courier_id:string;courier_name:string;created_at:string;destination_latitude:number|null;destination_longitude:number|null;latitude:number|null;longitude:number|null;location_source:string|null;location_updated_at:string|null};

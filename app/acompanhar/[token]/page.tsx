@@ -4,6 +4,7 @@ import {useParams} from "next/navigation";
 import Link from "next/link";
 import {Check,CheckCircle2,Clock3,MapPin,RefreshCw,ShieldCheck,Truck} from "lucide-react";
 import MapSurface from "../../components/MapSurface";
+import {EditorialArt} from "../../components/EditorialArt";
 type Status="preparing"|"on_route"|"arrived"|"delivered"|"cancelled";
 type Info={order:{id:string;status:Status;destination:string;destination_latitude:number|null;destination_longitude:number|null;customer_ready:boolean;courier_name:string|null;latitude:number|null;longitude:number|null;recorded_at:string|null;created_at:string;delivered_at:string|null};updates:{status:string;actor_type:string;created_at:string}[]};
 const names:Record<Status,string>={preparing:"Pedido em preparo",on_route:"Entregador a caminho",arrived:"Entregador chegou",delivered:"Pedido entregue",cancelled:"Pedido cancelado"};
