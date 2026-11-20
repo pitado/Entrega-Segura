@@ -1,7 +1,7 @@
 name: Qualidade do Entrega Segura
 on:
   push:
-    branches: [teste-deploy]
+    branches: [main, teste-deploy]
   workflow_dispatch:
 
 permissions:
