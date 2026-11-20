@@ -57,14 +57,14 @@ export default function Lab(){
  const couriers=data?.couriers||[];
  const focus=orders.find(o=>o.id===selected)||orders[0];
  return <div className="shell"><header className="topbar"><Link href="/" className="wordmark"><span>Entrega Segura</span></Link></header>
- <main className="app-content lab-page es-v3-lab">
+ <main className="app-content lab-page es-v3-lab es4-lab">
  <div className="page-title"><div><span className="es-v3-eyebrow">LABORATÓRIO CONECTADO</span><h1>Teste entre aparelhos<span className="es-v3-title-dot">.</span></h1><p>Fluxo demonstrativo com sincronização de dados no Neon.</p></div><Link href="/demo" className="button ghost-button">Simulação local</Link></div>
- <section className="es-v3-lab-hero"><div><span>✳ EXPERIÊNCIA CONECTADA</span><h2>Uma entrega.<br/>Todos em sintonia.</h2><p>Crie pedidos fictícios e abra o acompanhamento em outros celulares.</p></div><div className="es-v3-lab-art"><span className="es-v3-lab-bubble"><Warehouse size={32}/></span><span className="es-v3-lab-route"/> <span className="es-v3-lab-bubble second"><Truck size={33}/></span><span className="es-v3-lab-bubble third"><MapPin size={29}/></span></div></section>
+ <section className="es4-lab-hero"><div><span className="es4-pill es4-white-label">EXPERIÊNCIA CONECTADA ✳</span><h2>Um pedido.<br/>Três telas conectadas.</h2><p>Use dados fictícios e acompanhe as mudanças em vários aparelhos com o Neon.</p><a href="#es4-lab-content" className="es4-pill es4-black-pill">Começar teste <ArrowRight size={16}/></a></div><EditorialArt variant="parcel" className="es4-lab-art"/></section>
  {error&&<p className="inline-error" role="alert">{error}</p>}
- {!data?<section className="detail-panel lab-start"><div><h2>Iniciar uma sessão de demonstração</h2><p>O Neon cria um pedido e um entregador de teste. A sessão dura 24 horas, e os links de cada pedido podem ser abertos em aparelhos diferentes.</p><p>Não informe nomes e endereços de pessoas reais.</p></div><button disabled={loading} className="button main-button" onClick={start}>Iniciar teste <ArrowRight size={15}/></button></section>:
+ <div id="es4-lab-content" className="es4-lab-session">{!data?<section className="detail-panel lab-start"><div><h2>Iniciar uma sessão de demonstração</h2><p>O Neon cria um pedido e um entregador de teste. A sessão dura 24 horas, e os links de cada pedido podem ser abertos em aparelhos diferentes.</p><p>Não informe nomes e endereços de pessoas reais.</p></div><button disabled={loading} className="button main-button" onClick={start}>Iniciar teste <ArrowRight size={15}/></button></section>:
  <>
- <div className="kpi-grid"><div className="kpi"><small>Pedidos de teste</small><strong>{orders.length}</strong><span>Sessão atual</span></div><div className="kpi"><small>Em andamento</small><strong>{orders.filter(x=>!["delivered","cancelled"].includes(x.status)).length}</strong><span>Ativos</span></div><div className="kpi"><small>Em rota</small><strong>{orders.filter(x=>x.status==="on_route").length}</strong><span>Atualização contínua</span></div><div className="kpi"><small>Cliente pronto</small><strong>{orders.filter(x=>x.customer_ready).length}</strong><span>Confirmações</span></div></div>
- <div className="lab-grid">
+ <div className="kpi-grid es4-lab-kpis"><div className="kpi"><small>Pedidos de teste</small><strong>{orders.length}</strong><span>Sessão atual</span></div><div className="kpi"><small>Em andamento</small><strong>{orders.filter(x=>!["delivered","cancelled"].includes(x.status)).length}</strong><span>Ativos</span></div><div className="kpi"><small>Em rota</small><strong>{orders.filter(x=>x.status==="on_route").length}</strong><span>Atualização contínua</span></div><div className="kpi"><small>Cliente pronto</small><strong>{orders.filter(x=>x.customer_ready).length}</strong><span>Confirmações</span></div></div>
+ <div className="lab-grid es4-lab-grid">
  <div>
  <section className="detail-panel lab-form"><div className="section-top"><div><h2>Criar pedido</h2></div></div>
  <form onSubmit={e=>{e.preventDefault();void action({action:"order",customer:newCustomer,destination:address});}}><div className="form-grid"><div><label>Nome de teste</label><input required minLength={2} value={newCustomer} onChange={e=>setNewCustomer(e.target.value)}/></div><div><label>Destino de teste</label><input required minLength={3} value={address} onChange={e=>setAddress(e.target.value)}/></div></div><div className="lab-form-footer"><span>O link de acompanhamento é gerado automaticamente.</span><button disabled={loading} className="button main-button" type="submit"><Plus size={15}/> Criar pedido</button></div></form></section>
@@ -81,6 +81,6 @@ export default function Lab(){
  {focus.location_source==="simulation"&&<p className="lab-caption">Posição simulada para teste; não é GPS real.</p>}
  </>:<p>Nenhum pedido selecionado.</p>}</aside>
  </div><p className="lab-safety-note">Sessão demonstrativa, válida por 24 horas. Use apenas dados fictícios.</p>
- </>}
+ </>}</div>
  </main><footer className="footbar"><span>Entrega Segura</span><span>Next.js · Cloudflare Workers · Neon PostgreSQL</span></footer></div>;
 }
