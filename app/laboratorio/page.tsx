@@ -57,8 +57,9 @@ export default function Lab(){
  const couriers=data?.couriers||[];
  const focus=orders.find(o=>o.id===selected)||orders[0];
  return <div className="shell"><header className="topbar"><Link href="/" className="wordmark"><span>Entrega Segura</span></Link></header>
- <main className="app-content lab-page">
- <div className="page-title"><div><h1>Entregas</h1></div><Link href="/demo" className="button ghost-button">Simulação local</Link></div>
+ <main className="app-content lab-page es-v3-lab">
+ <div className="page-title"><div><span className="es-v3-eyebrow">LABORATÓRIO CONECTADO</span><h1>Teste entre aparelhos<span className="es-v3-title-dot">.</span></h1><p>Fluxo demonstrativo com sincronização de dados no Neon.</p></div><Link href="/demo" className="button ghost-button">Simulação local</Link></div>
+ <section className="es-v3-lab-hero"><div><span>✳ EXPERIÊNCIA CONECTADA</span><h2>Uma entrega.<br/>Todos em sintonia.</h2><p>Crie pedidos fictícios e abra o acompanhamento em outros celulares.</p></div><div className="es-v3-lab-art"><span className="es-v3-lab-bubble"><Warehouse size={32}/></span><span className="es-v3-lab-route"/> <span className="es-v3-lab-bubble second"><Truck size={33}/></span><span className="es-v3-lab-bubble third"><MapPin size={29}/></span></div></section>
  {error&&<p className="inline-error" role="alert">{error}</p>}
  {!data?<section className="detail-panel lab-start"><div><h2>Iniciar uma sessão de demonstração</h2><p>O Neon cria um pedido e um entregador de teste. A sessão dura 24 horas, e os links de cada pedido podem ser abertos em aparelhos diferentes.</p><p>Não informe nomes e endereços de pessoas reais.</p></div><button disabled={loading} className="button main-button" onClick={start}>Iniciar teste <ArrowRight size={15}/></button></section>:
  <>
