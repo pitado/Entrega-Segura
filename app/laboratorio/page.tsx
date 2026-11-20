@@ -1,7 +1,7 @@
 "use client";
 import {useCallback,useEffect,useState} from "react";
 import Link from "next/link";
-import {ArrowRight,Check,Clipboard,Plus,RefreshCw,Route,Truck,Warehouse} from "lucide-react";
+import {ArrowRight,Check,Clipboard,MapPin,Plus,RefreshCw,Route,Truck,Warehouse} from "lucide-react";
 import MapSurface from "../components/MapSurface";
 import "./lab.css";
 type Courier={id:string;name:string;active:boolean};
