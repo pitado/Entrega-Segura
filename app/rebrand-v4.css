@@ -345,3 +345,17 @@
  .es4-admin-status-buttons{overflow-x:auto;max-width:100%;flex-wrap:nowrap;padding-bottom:3px}
  .es4-admin-status-buttons button{flex:none;font-size:10px}
 }
+
+/* Final mobile visual QA — prioritize brand story over login */
+.es4-entry-intro::before{display:none!important}
+@media(max-width:700px){
+ .home-entry{display:flex!important;flex-direction:column!important;gap:15px!important;align-items:stretch!important;padding:23px 15px 65px!important}
+ .home-entry .es4-entry-intro{order:-3!important;grid-row:auto!important;grid-column:auto!important;width:100%!important}
+ .home-entry .es4-entry-intro::before{display:none!important}
+ .home-entry .es4-entry-intro h1{font-size:clamp(40px,10.2vw,51px);margin:8px 0 13px!important;line-height:1.04}
+ .home-entry .es4-entry-intro p{font-size:12px;line-height:1.65}
+ .home-entry .es4-entry-illustration{margin-top:18px}
+ .home-entry .entry-card{order:-2!important;grid-row:auto!important;grid-column:auto!important;width:100%!important;padding:23px 21px!important;margin:0!important}
+ .home-entry .entry-links{order:-1!important;grid-row:auto!important;grid-column:auto!important;width:100%!important;margin:0!important}
+ .home-entry .entry-links a{min-height:95px!important}
+}
