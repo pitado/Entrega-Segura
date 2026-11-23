@@ -359,7 +359,6 @@ export default function DemoPage() {
             </button>;
           })}
         </nav>
-        <span className="trip-demo-label">Demonstração</span>
       </div>
     </header>
     <main className="trip-main">

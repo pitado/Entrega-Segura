@@ -63,9 +63,8 @@
 .trip-header nav svg { display: none; }
 .trip-header nav button:hover:not([aria-current]) { background: #eff0f8; }
 .trip-header nav button[aria-current] { background: var(--trip-ink); color: #fff; }
-.trip-demo-label, .trip-live-label { display: inline-flex; align-items: center; gap: 12px; font-weight: 740; }
-.trip-demo-label { margin-left: auto; color: var(--trip-subtle); white-space: nowrap; font-size: 17px; }
-.trip-demo-label::before, .trip-live-label::before {
+.trip-live-label { display: inline-flex; align-items: center; gap: 12px; font-weight: 740; }
+.trip-live-label::before {
   content: ""; width: 10px; height: 10px; border-radius: 50%; background: #42ac5d; flex: 0 0 auto;
 }
 
@@ -284,7 +283,6 @@
   .trip-header-inner { gap: 12px; }
   .trip-header nav { gap: 3px; }
   .trip-brand { flex-basis: 46px; height: 46px; border-radius: 12px; }
-  .trip-demo-label { font-size: 14px; gap: 6px; }
   .trip-merchant-grid, .trip-courier-grid, .trip-customer-grid { grid-template-columns: 1fr; gap: 12px; }
   .trip-hero { min-height: 300px; }
   .trip-customer-hero { margin-right: 0; border-radius: var(--trip-radius); }
