@@ -349,7 +349,7 @@ export default function DemoPage() {
     <header className="trip-header">
       <div className="trip-header-inner">
         <span className="trip-brand" aria-hidden="true"><img src="/redesign/route-symbol.webp" alt="" /></span>
-        <nav aria-label="Perfis da demonstração">
+        <nav aria-label="Perfis da demonstração" data-profile={view}>
           {(Object.keys(views) as View[]).map(profile => {
             const Icon = profileIcons[profile];
             return <button key={profile} type="button" aria-label={views[profile]}
