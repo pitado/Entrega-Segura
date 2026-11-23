@@ -189,6 +189,11 @@
   animation: trip-map-appear .38s cubic-bezier(.2, .8, .2, 1) both;
 }
 .trip-map-fullscreen .trip-map-canvas { inset: 0; }
+/* Keep the required OpenStreetMap/OpenFreeMap attribution visible above the bottom sheet. */
+.trip-map-fullscreen .maplibregl-ctrl-bottom-left {
+  bottom: clamp(235px, 32vh, 305px);
+  left: 7px;
+}
 .trip-map-fullscreen .trip-map-zoom {
   right: max(14px, env(safe-area-inset-right));
   bottom: min(40vh, 350px); border-radius: 18px;
