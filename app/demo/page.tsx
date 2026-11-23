@@ -37,15 +37,20 @@ const profileIcons = { merchant: Warehouse, courier: Bike, customer: MapPin };
 const profileOrder = Object.keys(views) as View[];
 const mobileProfileBar = "(max-width: 580px)";
 const animatedProfileBar = `${mobileProfileBar} and (prefers-reduced-motion: no-preference)`;
-const glassTravelMs = 440;
+const glassTapMs = 300;
 
 type ProfileDrag = {
+  button: HTMLButtonElement;
+  profile: View;
   pointerId: number;
   startX: number;
   startY: number;
   firstCenter: number;
   gap: number;
   dragging: boolean;
+  nextIndex: number;
+  drawnIndex: number;
+  frame?: number;
 };
 const stages = Object.keys(statuses) as Status[];
 // Coordinates on the illustrated map, independent of the geographic destination.
@@ -138,8 +143,8 @@ function ProfileGlyph({ profile }: { profile: View }) {
 
 function ProfileNavigation({ view, onChange }: { view: View; onChange: (view: View) => void }) {
   const [pressed, setPressed] = useState(false);
-  const [previewIndex, setPreviewIndex] = useState<number | null>(null);
-  const [target, setTarget] = useState<View | null>(null);
+  const [dragging, setDragging] = useState(false);
+  const [target, setTarget] = useState<{ view: View; duration: number } | null>(null);
   const gesture = useRef<ProfileDrag | null>(null);
   const ignoreClick = useRef(false);
   const settleTimer = useRef<number | undefined>(undefined);
@@ -150,6 +155,9 @@ function ProfileNavigation({ view, onChange }: { view: View; onChange: (view: Vi
     setTarget(null);
     return () => window.clearTimeout(settleTimer.current);
   }, [view]);
+  useEffect(() => () => {
+    if (gesture.current?.frame !== undefined) window.cancelAnimationFrame(gesture.current.frame);
+  }, []);
 
   function selectProfile(next: View) {
     window.clearTimeout(settleTimer.current);
@@ -157,11 +165,10 @@ function ProfileNavigation({ view, onChange }: { view: View; onChange: (view: Vi
     if (next !== view) changeView.current(next);
   }
 
-  function settleLens(next: View) {
+  function settleLens(next: View, duration: number) {
     window.clearTimeout(settleTimer.current);
-    setTarget(next);
-    // A release already over the target may not move far enough to emit transitionend.
-    settleTimer.current = window.setTimeout(() => selectProfile(next), glassTravelMs + 50);
+    setTarget({ view: next, duration });
+    settleTimer.current = window.setTimeout(() => selectProfile(next), duration + 40);
   }
 
   function positionAt(x: number, drag: ProfileDrag) {
@@ -169,23 +176,29 @@ function ProfileNavigation({ view, onChange }: { view: View; onChange: (view: Vi
   }
 
   function startGesture(event: PointerEvent<HTMLElement>) {
-    if (!event.isPrimary || event.button !== 0 ||
-      !(event.target instanceof Element) || !event.target.closest("button")) return;
+    if (!event.isPrimary || event.button !== 0 || !(event.target instanceof Element)) return;
+    const button = event.target.closest("button");
+    if (!button) return;
 
     ignoreClick.current = false;
     if (!window.matchMedia(mobileProfileBar).matches) return;
 
-    const [first, second] = Array.from(event.currentTarget.querySelectorAll("button"), button => button.getBoundingClientRect());
+    const buttons = Array.from(event.currentTarget.querySelectorAll("button"));
+    const [first, second] = buttons.map(button => button.getBoundingClientRect());
     const gap = second.left - first.left;
     if (gap <= 0) return;
 
     gesture.current = {
+      button,
+      profile: profileOrder[buttons.indexOf(button)],
       pointerId: event.pointerId,
       startX: event.clientX,
       startY: event.clientY,
       firstCenter: first.left + first.width / 2,
       gap,
       dragging: false,
+      nextIndex: 0,
+      drawnIndex: 0,
     };
     setPressed(true);
   }
@@ -193,15 +206,27 @@ function ProfileNavigation({ view, onChange }: { view: View; onChange: (view: Vi
   function dragGesture(event: PointerEvent<HTMLElement>) {
     const drag = gesture.current;
     if (!drag || drag.pointerId !== event.pointerId) return;
+    const bar = event.currentTarget;
+    drag.nextIndex = positionAt(event.clientX, drag);
     if (!drag.dragging) {
       const horizontal = Math.abs(event.clientX - drag.startX);
       if (horizontal < 6 || horizontal <= Math.abs(event.clientY - drag.startY)) return;
       drag.dragging = true;
+      drag.drawnIndex = drag.nextIndex;
+      bar.style.setProperty("--glass-drag-index", String(drag.drawnIndex));
       window.clearTimeout(settleTimer.current);
       setTarget(null);
-      event.currentTarget.setPointerCapture(event.pointerId);
+      setDragging(true);
+      bar.setPointerCapture(event.pointerId);
+      return;
     }
-    setPreviewIndex(positionAt(event.clientX, drag));
+    if (drag.frame === undefined) {
+      drag.frame = window.requestAnimationFrame(() => {
+        drag.frame = undefined;
+        drag.drawnIndex = drag.nextIndex;
+        bar.style.setProperty("--glass-drag-index", String(drag.drawnIndex));
+      });
+    }
   }
 
   function endGesture(event: PointerEvent<HTMLElement>, cancelled = false) {
@@ -209,27 +234,44 @@ function ProfileNavigation({ view, onChange }: { view: View; onChange: (view: Vi
     if (!drag || drag.pointerId !== event.pointerId) return;
     gesture.current = null;
     setPressed(false);
-    setPreviewIndex(null);
-    if (!drag.dragging) return;
+    if (!drag.dragging) {
+      if (!cancelled && event.pointerType === "touch" &&
+        drag.button.contains(document.elementFromPoint(event.clientX, event.clientY))) {
+        // A quick tap after a swipe can end without a synthesized click.
+        ignoreClick.current = true;
+        select(drag.profile, true);
+      }
+      return;
+    }
 
+    if (drag.frame !== undefined) window.cancelAnimationFrame(drag.frame);
+    setDragging(false);
     if (!cancelled) ignoreClick.current = true;
     const next = cancelled ? view : profileOrder[Math.round(positionAt(event.clientX, drag))];
-    select(next, true);
+    const remaining = Math.abs(profileOrder.indexOf(next) - drag.drawnIndex);
+    if (remaining * drag.gap <= 2 || !window.matchMedia(animatedProfileBar).matches) {
+      selectProfile(next);
+    } else {
+      settleLens(next, Math.min(240, 85 + Math.round(remaining * 170)));
+    }
   }
 
   function select(next: View, pointer: boolean) {
     if (pointer && window.matchMedia(animatedProfileBar).matches) {
-      if (next !== target) settleLens(next);
+      const current = target?.view ?? view;
+      if (next === current) return;
+      const steps = Math.abs(profileOrder.indexOf(next) - profileOrder.indexOf(current));
+      settleLens(next, glassTapMs + (steps - 1) * 60);
     } else {
       selectProfile(next);
     }
   }
 
   const optical = pressed || target !== null;
-  const lensIndex = previewIndex ?? profileOrder.indexOf(target ?? view);
+  const lensIndex = profileOrder.indexOf(target?.view ?? view);
   return <nav aria-label="Perfis da demonstração" data-profile={view}
-    data-optical={optical || undefined} data-dragging={previewIndex !== null || undefined}
-    style={{ "--glass-index": lensIndex, "--glass-duration": `${glassTravelMs}ms` } as CSSProperties}
+    data-optical={optical || undefined} data-dragging={dragging || undefined}
+    style={{ "--glass-index": lensIndex, "--glass-duration": `${target?.duration ?? glassTapMs}ms` } as CSSProperties}
     onPointerDown={startGesture}
     onPointerMove={dragGesture}
     onPointerUp={endGesture}
@@ -243,14 +285,15 @@ function ProfileNavigation({ view, onChange }: { view: View; onChange: (view: Vi
       if (!gesture.current?.dragging) endGesture(event, true);
     }}
     onClickCapture={event => {
-      if (event.detail > 0 && ignoreClick.current) {
+      const touchClick = "pointerType" in event.nativeEvent && event.nativeEvent.pointerType === "touch";
+      if (ignoreClick.current && (event.detail > 0 || touchClick)) {
         ignoreClick.current = false;
         event.stopPropagation();
       }
     }}>
     <span className="trip-glass-lens" aria-hidden="true" onTransitionEnd={event => {
       if (event.target === event.currentTarget && event.propertyName === "transform" && target !== null) {
-        selectProfile(target);
+        selectProfile(target.view);
       }
     }}>
       <span className="trip-glass-shell">

@@ -280,7 +280,8 @@
     --glass-gap: 5px;
     --glass-inset: 7px;
     --glass-index: 0;
-    --glass-travel: transform var(--glass-duration) cubic-bezier(.43,.03,.34,1);
+    --glass-position: var(--glass-index);
+    --glass-travel: transform var(--glass-duration) cubic-bezier(.28,.6,.34,1);
     position: fixed;
     z-index: 3;
     inset: auto 12px max(12px, env(safe-area-inset-bottom)) 12px;
@@ -309,7 +310,8 @@
     inset: var(--glass-inset) auto var(--glass-inset) var(--glass-inset);
     width: calc((100% - 2 * var(--glass-inset) - 2 * var(--glass-gap)) / 3);
     pointer-events: none;
-    transform: translateX(calc(var(--glass-index) * (100% + var(--glass-gap))));
+    transform: translate3d(calc(var(--glass-position) * (100% + var(--glass-gap))), 0, 0);
+    will-change: transform;
     transition: var(--glass-travel);
   }
   .trip-glass-shell {
@@ -331,7 +333,7 @@
     gap: var(--glass-gap);
     opacity: 0;
     /* Move the labels against the lens so the portion under it is magnified. */
-    transform: translateX(calc(-1 * var(--glass-index) * (100% + var(--glass-gap)) / 3));
+    transform: translate3d(calc(-1 * var(--glass-position) * (100% + var(--glass-gap)) / 3), 0, 0);
     transition: var(--glass-travel);
   }
   .trip-glass-glyph {
@@ -356,7 +358,10 @@
   .trip-header nav[data-optical] .trip-glass-glyph svg {
     filter: drop-shadow(-.6px 0 #58bdfa8c) drop-shadow(.6px 0 #9473ff73);
   }
-  .trip-header nav[data-dragging] :is(.trip-glass-lens, .trip-glass-optics) { transition: none; }
+  .trip-header nav[data-dragging] {
+    --glass-position: var(--glass-drag-index, var(--glass-index));
+    --glass-travel: none;
+  }
   .trip-header nav button {
     position: relative;
     display: grid;
@@ -463,6 +468,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .trip-header nav :is(.trip-glass-lens, .trip-glass-shell, .trip-glass-optics) { transition: none; }
   .trip-header nav svg { transition: none; }
   .trip-header nav button:active svg, .trip-header nav[data-optical] .trip-glass-shell { transform: none; }
 }
