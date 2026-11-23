@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type FormEvent, type PointerEvent, type ReactNode } from "react";
 import {
   ArrowRight, Bike, Check, ChefHat, Clipboard, MapPin, Navigation,
   Minus, Package, Pause, Play, Plus, RefreshCw, Route, Search, Truck, UserRound, Warehouse,
@@ -33,6 +33,17 @@ const storageKey = "entrega-segura-test-trip-v3";
 const priorKey = "entrega-segura-test-trip-v2";
 const views: Record<View, string> = { merchant: "Estabelecimento", courier: "Entregador", customer: "Cliente" };
 const profileIcons = { merchant: Warehouse, courier: Bike, customer: MapPin };
+const profileOrder = Object.keys(views) as View[];
+const mobileProfileBar = "(max-width: 580px)";
+
+type ProfileDrag = {
+  pointerId: number;
+  startX: number;
+  startY: number;
+  firstCenter: number;
+  gap: number;
+  dragging: boolean;
+};
 const stages = Object.keys(statuses) as Status[];
 // Coordinates on the illustrated map, independent of the geographic destination.
 const schematic = [[22, 76], [29, 72], [34, 68], [42, 68], [49, 67], [51, 59],
@@ -172,6 +183,121 @@ function IllustratedMap({ order }: { order: Order }) {
   </section>;
 }
 
+function ProfileGlyph({ profile }: { profile: View }) {
+  const Icon = profileIcons[profile];
+  return <><Icon size={21} aria-hidden="true" /><span>{views[profile]}</span></>;
+}
+
+function ProfileNavigation({ view, onChange }: { view: View; onChange: (view: View) => void }) {
+  const [pressed, setPressed] = useState(false);
+  const [previewIndex, setPreviewIndex] = useState<number | null>(null);
+  const [settling, setSettling] = useState(false);
+  const gesture = useRef<ProfileDrag | null>(null);
+  const ignoreClick = useRef(false);
+  const settleTimer = useRef<number | undefined>(undefined);
+
+  useEffect(() => () => window.clearTimeout(settleTimer.current), []);
+
+  function moveLens() {
+    window.clearTimeout(settleTimer.current);
+    setSettling(true);
+    settleTimer.current = window.setTimeout(() => setSettling(false), 350);
+  }
+
+  function positionAt(x: number, drag: ProfileDrag) {
+    return Math.max(0, Math.min(profileOrder.length - 1, (x - drag.firstCenter) / drag.gap));
+  }
+
+  function startGesture(event: PointerEvent<HTMLElement>) {
+    if (!event.isPrimary || event.button !== 0 ||
+      !(event.target instanceof Element) || !event.target.closest("button")) return;
+
+    ignoreClick.current = false;
+    if (!window.matchMedia(mobileProfileBar).matches) return;
+
+    const [first, second] = Array.from(event.currentTarget.querySelectorAll("button"), button => button.getBoundingClientRect());
+    const gap = second.left - first.left;
+    if (gap <= 0) return;
+
+    gesture.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      firstCenter: first.left + first.width / 2,
+      gap,
+      dragging: false,
+    };
+    setPressed(true);
+  }
+
+  function dragGesture(event: PointerEvent<HTMLElement>) {
+    const drag = gesture.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    if (!drag.dragging) {
+      const horizontal = Math.abs(event.clientX - drag.startX);
+      if (horizontal < 6 || horizontal <= Math.abs(event.clientY - drag.startY)) return;
+      drag.dragging = true;
+      event.currentTarget.setPointerCapture(event.pointerId);
+    }
+    setPreviewIndex(positionAt(event.clientX, drag));
+  }
+
+  function endGesture(event: PointerEvent<HTMLElement>, cancelled = false) {
+    const drag = gesture.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    gesture.current = null;
+    setPressed(false);
+    setPreviewIndex(null);
+    if (!drag.dragging) return;
+
+    moveLens();
+    if (!cancelled) {
+      ignoreClick.current = true;
+      const next = profileOrder[Math.round(positionAt(event.clientX, drag))];
+      if (next !== view) onChange(next);
+    }
+  }
+
+  function select(next: View) {
+    if (next === view) return;
+    if (window.matchMedia(mobileProfileBar).matches) moveLens();
+    onChange(next);
+  }
+
+  const optical = pressed || settling;
+  return <nav aria-label="Perfis da demonstração" data-profile={view}
+    data-optical={optical || undefined} data-dragging={previewIndex !== null || undefined}
+    style={previewIndex === null ? undefined : { "--glass-index": previewIndex } as CSSProperties}
+    onPointerDown={startGesture}
+    onPointerMove={dragGesture}
+    onPointerUp={endGesture}
+    onPointerCancel={event => endGesture(event, true)}
+    onLostPointerCapture={event => endGesture(event, true)}
+    onPointerLeave={event => {
+      if (!gesture.current?.dragging) endGesture(event, true);
+    }}
+    onClickCapture={event => {
+      if (event.detail > 0 && ignoreClick.current) {
+        ignoreClick.current = false;
+        event.stopPropagation();
+      }
+    }}>
+    <span className="trip-glass-lens" aria-hidden="true">
+      <span className="trip-glass-shell">
+        <span className="trip-glass-optics">
+          {profileOrder.map(profile => <span className="trip-glass-glyph" key={profile}>
+            <ProfileGlyph profile={profile} />
+          </span>)}
+        </span>
+      </span>
+    </span>
+    {profileOrder.map(profile => <button key={profile} type="button"
+      aria-current={view === profile ? "page" : undefined} onClick={() => select(profile)}>
+      <ProfileGlyph profile={profile} />
+    </button>)}
+  </nav>;
+}
+
 export default function DemoPage() {
   const [demo, setDemo] = useState(initialDemo);
   const [loaded, setLoaded] = useState(false);
@@ -182,8 +308,6 @@ export default function DemoPage() {
   const [feedback, setFeedback] = useState("");
   const [manualLink, setManualLink] = useState("");
   const dialog = useRef<HTMLDialogElement>(null);
-  const lens = useRef<HTMLSpanElement>(null);
-  const lensMotion = useRef<Animation | undefined>(undefined);
   const order = demo.orders.find(item => item.id === demo.selected) ?? demo.orders[0];
 
   useEffect(() => {
@@ -256,18 +380,7 @@ export default function DemoPage() {
   }, [feedback]);
 
   function switchView(next: View) {
-    if (next !== view) {
-      window.scrollTo({ top: 0, behavior: "instant" });
-      if (window.matchMedia("(max-width: 580px) and (prefers-reduced-motion: no-preference)").matches) {
-        lensMotion.current?.cancel();
-        lensMotion.current = lens.current?.animate?.([
-          { transform: "scale(1)" },
-          { transform: "scale(1.12, .92)", offset: .28 },
-          { transform: "scale(.99, 1.015)", offset: .8 },
-          { transform: "scale(1)" },
-        ], { duration: 400, easing: "cubic-bezier(.2, .7, .3, 1)" });
-      }
-    }
+    if (next !== view) window.scrollTo({ top: 0, behavior: "instant" });
     setView(next);
     const url = new URL(window.location.href);
     url.searchParams.set("view", next);
@@ -362,17 +475,7 @@ export default function DemoPage() {
     <header className="trip-header">
       <div className="trip-header-inner">
         <span className="trip-brand" aria-hidden="true"><img src="/redesign/route-symbol.webp" alt="" /></span>
-        <nav aria-label="Perfis da demonstração" data-profile={view}>
-          <span className="trip-glass-lens" aria-hidden="true"><span ref={lens} /></span>
-          {(Object.keys(views) as View[]).map(profile => {
-            const Icon = profileIcons[profile];
-            return <button key={profile} type="button" aria-label={views[profile]}
-              aria-current={view === profile ? "page" : undefined} onClick={() => switchView(profile)}>
-              <Icon size={21} aria-hidden="true" />
-              <span>{views[profile]}</span>
-            </button>;
-          })}
-        </nav>
+        <ProfileNavigation view={view} onChange={switchView} />
       </div>
     </header>
     <main className="trip-main">
