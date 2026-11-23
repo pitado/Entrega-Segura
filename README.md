@@ -2,13 +2,15 @@
 
 Aplicação responsiva para **estabelecimento, motoboy e consumidor**, com Next.js 15, Cloudflare Workers/OpenNext, banco Neon PostgreSQL e mapas MapLibre/OpenFreeMap.
 
-## Fluxos
+## Protótipo
 
-- **Estabelecimento** (`/`): login administrativo por senha de MVP, cadastro de motoboys, criação e atribuição de pedidos, avanço/cancelamento com validação de status e link individual do cliente. Os pedidos demonstrativos **não são exibidos** no painel operacional.
-- **Motoboy** (`/entregador/[token]`): acesso por link revogável, confirmação de etapas, envio de GPS autorizado enquanto a página está ativa e navegação externa.
-- **Consumidor** (`/acompanhar/[token]`): acompanhamento de etapas e GPS recente, confirmação de recebimento pronto e opção explícita para informar sua localização como destino exato.
-- **Simulação local** (`/demo`): viagem fictícia em armazenamento do navegador, sem login e sem sincronizar entre dispositivos.
-- **Laboratório Neon** (`/laboratorio`): sessões de demonstração isoladas, com pedido, entregador e links individuais sincronizados entre dispositivos. Sessões válidas por 24h.
+A página inicial abre a demonstração em `/demo`. Os três perfis trabalham com o mesmo pedido fictício, salvo no navegador.
+
+- **Estabelecimento** cria, pesquisa e filtra pedidos.
+- **Entregador** inicia o trajeto e avança as etapas da entrega.
+- **Cliente** acompanha o status e confirma que está pronto para receber.
+
+O protótipo usa um mapa ilustrativo e oferece links externos de navegação. As APIs do MVP continuam no código.
 
 ## Mapas e previsão de chegada
 

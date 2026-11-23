@@ -1,11 +1,15 @@
+import type { Metadata, Viewport } from "next";
+import type { ReactNode } from "react";
 import "./style.css";
-import "./rebrand.css";
-import "./rebrand-v3.css";
-import "./rebrand-v4.css";
-import type {Metadata} from "next";
-export const metadata:Metadata={
- title:{default:"Entrega Segura",template:"%s | Entrega Segura"},
- description:"Gestão de entregas, painel de estabelecimento e acompanhamento compartilhado.",
- robots:{index:false,follow:false},
+
+export const metadata: Metadata = {
+  title: "Demonstração de entregas",
+  description: "Simulação de entregas para estabelecimento, entregador e cliente.",
+  robots: { index: false, follow: false },
 };
-export default function RootLayout({children}:{children:React.ReactNode}){return <html lang="pt-BR"><body>{children}</body></html>;}
+
+export const viewport: Viewport = { viewportFit: "cover" };
+
+export default function RootLayout({ children }: { children: ReactNode }) {
+  return <html lang="pt-BR"><body>{children}</body></html>;
+}

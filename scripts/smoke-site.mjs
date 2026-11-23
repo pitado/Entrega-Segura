@@ -35,11 +35,11 @@ async function readyForSmoke(){
 }
 await readyForSmoke();
 let sessionKey="",courierToken="",consumerToken="",orderId="";
-await check("Página inicial e rotas web",async()=>{
- for(const path of ["/","/demo","/laboratorio","/acompanhar","/entregador"]){
+await check("Página inicial e demonstração",async()=>{
+ for(const path of ["/","/demo"]){
   const res=await request(path);
   assert.equal(res.status,200,path+" "+res.status);
-  assert.match(String(res.body),/Entrega Segura/i,path);
+  assert.match(String(res.body),/Demonstração de entregas/i,path);
  }
 });
 await check("Neon e endpoint de saúde",async()=>{
