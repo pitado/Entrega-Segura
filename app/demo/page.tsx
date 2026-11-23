@@ -234,7 +234,11 @@ function ProfileNavigation({ view, onChange }: { view: View; onChange: (view: Vi
     onPointerMove={dragGesture}
     onPointerUp={endGesture}
     onPointerCancel={event => endGesture(event, true)}
-    onLostPointerCapture={event => endGesture(event, true)}
+    onLostPointerCapture={event => {
+      // Touch starts with implicit capture on the pressed icon or button.
+      // Its loss is expected when the navigation takes over the drag.
+      if (event.target === event.currentTarget) endGesture(event, true);
+    }}
     onPointerLeave={event => {
       if (!gesture.current?.dragging) endGesture(event, true);
     }}
