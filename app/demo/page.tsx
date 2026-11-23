@@ -36,6 +36,8 @@ const views: Record<View, string> = { merchant: "Estabelecimento", courier: "Ent
 const profileIcons = { merchant: Warehouse, courier: Bike, customer: MapPin };
 const profileOrder = Object.keys(views) as View[];
 const mobileProfileBar = "(max-width: 580px)";
+const animatedProfileBar = `${mobileProfileBar} and (prefers-reduced-motion: no-preference)`;
+const glassTravelMs = 440;
 
 type ProfileDrag = {
   pointerId: number;
@@ -137,17 +139,29 @@ function ProfileGlyph({ profile }: { profile: View }) {
 function ProfileNavigation({ view, onChange }: { view: View; onChange: (view: View) => void }) {
   const [pressed, setPressed] = useState(false);
   const [previewIndex, setPreviewIndex] = useState<number | null>(null);
-  const [settling, setSettling] = useState(false);
+  const [target, setTarget] = useState<View | null>(null);
   const gesture = useRef<ProfileDrag | null>(null);
   const ignoreClick = useRef(false);
   const settleTimer = useRef<number | undefined>(undefined);
 
-  useEffect(() => () => window.clearTimeout(settleTimer.current), []);
+  const changeView = useRef(onChange);
+  useEffect(() => { changeView.current = onChange; }, [onChange]);
+  useEffect(() => {
+    setTarget(null);
+    return () => window.clearTimeout(settleTimer.current);
+  }, [view]);
 
-  function moveLens() {
+  function selectProfile(next: View) {
     window.clearTimeout(settleTimer.current);
-    setSettling(true);
-    settleTimer.current = window.setTimeout(() => setSettling(false), 350);
+    setTarget(null);
+    if (next !== view) changeView.current(next);
+  }
+
+  function settleLens(next: View) {
+    window.clearTimeout(settleTimer.current);
+    setTarget(next);
+    // A release already over the target may not move far enough to emit transitionend.
+    settleTimer.current = window.setTimeout(() => selectProfile(next), glassTravelMs + 50);
   }
 
   function positionAt(x: number, drag: ProfileDrag) {
@@ -183,6 +197,8 @@ function ProfileNavigation({ view, onChange }: { view: View; onChange: (view: Vi
       const horizontal = Math.abs(event.clientX - drag.startX);
       if (horizontal < 6 || horizontal <= Math.abs(event.clientY - drag.startY)) return;
       drag.dragging = true;
+      window.clearTimeout(settleTimer.current);
+      setTarget(null);
       event.currentTarget.setPointerCapture(event.pointerId);
     }
     setPreviewIndex(positionAt(event.clientX, drag));
@@ -196,24 +212,24 @@ function ProfileNavigation({ view, onChange }: { view: View; onChange: (view: Vi
     setPreviewIndex(null);
     if (!drag.dragging) return;
 
-    moveLens();
-    if (!cancelled) {
-      ignoreClick.current = true;
-      const next = profileOrder[Math.round(positionAt(event.clientX, drag))];
-      if (next !== view) onChange(next);
+    if (!cancelled) ignoreClick.current = true;
+    const next = cancelled ? view : profileOrder[Math.round(positionAt(event.clientX, drag))];
+    select(next, true);
+  }
+
+  function select(next: View, pointer: boolean) {
+    if (pointer && window.matchMedia(animatedProfileBar).matches) {
+      if (next !== target) settleLens(next);
+    } else {
+      selectProfile(next);
     }
   }
 
-  function select(next: View) {
-    if (next === view) return;
-    if (window.matchMedia(mobileProfileBar).matches) moveLens();
-    onChange(next);
-  }
-
-  const optical = pressed || settling;
+  const optical = pressed || target !== null;
+  const lensIndex = previewIndex ?? profileOrder.indexOf(target ?? view);
   return <nav aria-label="Perfis da demonstração" data-profile={view}
     data-optical={optical || undefined} data-dragging={previewIndex !== null || undefined}
-    style={previewIndex === null ? undefined : { "--glass-index": previewIndex } as CSSProperties}
+    style={{ "--glass-index": lensIndex, "--glass-duration": `${glassTravelMs}ms` } as CSSProperties}
     onPointerDown={startGesture}
     onPointerMove={dragGesture}
     onPointerUp={endGesture}
@@ -228,7 +244,11 @@ function ProfileNavigation({ view, onChange }: { view: View; onChange: (view: Vi
         event.stopPropagation();
       }
     }}>
-    <span className="trip-glass-lens" aria-hidden="true">
+    <span className="trip-glass-lens" aria-hidden="true" onTransitionEnd={event => {
+      if (event.target === event.currentTarget && event.propertyName === "transform" && target !== null) {
+        selectProfile(target);
+      }
+    }}>
       <span className="trip-glass-shell">
         <span className="trip-glass-optics">
           {profileOrder.map(profile => <span className="trip-glass-glyph" key={profile}>
@@ -238,7 +258,7 @@ function ProfileNavigation({ view, onChange }: { view: View; onChange: (view: Vi
       </span>
     </span>
     {profileOrder.map(profile => <button key={profile} type="button"
-      aria-current={view === profile ? "page" : undefined} onClick={() => select(profile)}>
+      aria-current={view === profile ? "page" : undefined} onClick={event => select(profile, event.detail > 0)}>
       <ProfileGlyph profile={profile} />
     </button>)}
   </nav>;

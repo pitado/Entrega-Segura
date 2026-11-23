@@ -280,7 +280,7 @@
     --glass-gap: 5px;
     --glass-inset: 7px;
     --glass-index: 0;
-    --glass-travel: transform 350ms cubic-bezier(.22,.82,.25,1);
+    --glass-travel: transform var(--glass-duration) cubic-bezier(.43,.03,.34,1);
     position: fixed;
     z-index: 3;
     inset: auto 12px max(12px, env(safe-area-inset-bottom)) 12px;
@@ -303,8 +303,6 @@
       backdrop-filter: blur(20px) saturate(155%);
     }
   }
-  .trip-header nav[data-profile="courier"] { --glass-index: 1; }
-  .trip-header nav[data-profile="customer"] { --glass-index: 2; }
   .trip-glass-lens {
     display: block;
     position: absolute;
@@ -322,7 +320,7 @@
     border-radius: 25px;
     background: linear-gradient(145deg, #dce5ffed, #aebffeeb);
     box-shadow: inset 0 0 0 1px #ffffffaa, inset 0 1px 1px #ffffffb3, 0 2px 7px #697a9f22;
-    transition: transform 280ms cubic-bezier(.2,.85,.25,1), box-shadow 200ms ease;
+    transition: transform 190ms cubic-bezier(.2,.85,.25,1), box-shadow 200ms ease;
   }
   .trip-glass-optics {
     position: absolute;
@@ -348,11 +346,16 @@
   }
   .trip-header nav[data-optical] .trip-glass-lens { z-index: 2; }
   .trip-header nav[data-optical] .trip-glass-shell {
-    transform: translateY(-3px) scale(1.075, 1.15);
-    background: linear-gradient(155deg, #f7faff 5%, #d8e6ff 53%, #c7d5f8);
-    box-shadow: inset 1px 2px 2px #fff, inset 2px 0 2px #6fc5ff85, inset -2px -1px 2px #bc9ef185, 0 5px 12px #425b9140;
+    transform: translateY(-4px) scale(1.13, 1.23);
+    background: radial-gradient(ellipse at 28% 0%, #ffffffd9, #ffffff00 62%),
+      linear-gradient(155deg, #edf6fff5, #d5e4ffed 58%, #c9d6f8f5);
+    box-shadow: inset 0 0 0 1px #ffffffd9, inset 2px 2px 3px #fff, inset 2px 0 3px #6fc5ffa8,
+      inset -2px -1px 3px #bc9ef19e, 0 5px 15px #425b914d;
   }
   .trip-header nav[data-optical] .trip-glass-optics { opacity: 1; }
+  .trip-header nav[data-optical] .trip-glass-glyph svg {
+    filter: drop-shadow(-.6px 0 #58bdfa8c) drop-shadow(.6px 0 #9473ff73);
+  }
   .trip-header nav[data-dragging] :is(.trip-glass-lens, .trip-glass-optics) { transition: none; }
   .trip-header nav button {
     position: relative;
