@@ -3,10 +3,11 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import {
   ArrowRight, Bike, Check, ChefHat, Clipboard, MapPin, Navigation,
-  Minus, Package, Pause, Play, Plus, RefreshCw, Route, Search, Truck, UserRound, Warehouse,
+  Package, Pause, Play, RefreshCw, Search, Truck, UserRound, Warehouse,
 } from "lucide-react";
 import { wazeDirectionsUrl } from "../../lib/navigation";
 import "./demo.css";
+import DeliveryTrackingMap from "./DeliveryTrackingMap";
 
 const statuses = {
   preparing: { label: "Em preparo", icon: ChefHat },
@@ -114,61 +115,6 @@ function Timeline({ status, title = false }: { status: Status; title?: boolean }
         <span>{statuses[stage].label}</span>
       </li>;
     })}</ol>
-  </section>;
-}
-
-function IllustratedMap({ order }: { order: Order }) {
-  const [zoom, setZoom] = useState(1);
-  const routeLayer = useRef<HTMLCanvasElement>(null);
-  useEffect(() => {
-    const canvas = routeLayer.current;
-    if (!canvas) return;
-    const context = canvas.getContext("2d");
-    if (!context) return;
-    const resize = () => {
-      const { width, height } = canvas.getBoundingClientRect();
-      const scale = window.devicePixelRatio || 1;
-      canvas.width = width * scale;
-      canvas.height = height * scale;
-      context.scale(scale, scale);
-      const points = schematic.map(([x, y]) => [x * width / 100, y * height / 100]);
-      context.beginPath();
-      context.moveTo(...points[0] as [number, number]);
-      for (let i = 1; i < points.length - 1; i++) {
-        const [x, y] = points[i];
-        const [nextX, nextY] = points[i + 1];
-        context.quadraticCurveTo(x, y, (x + nextX) / 2, (y + nextY) / 2);
-      }
-      context.lineTo(...points[points.length - 1] as [number, number]);
-      context.lineCap = "round";
-      context.lineWidth = 13;
-      context.strokeStyle = "#fff";
-      context.stroke();
-      context.lineWidth = 8;
-      context.strokeStyle = "#6387f4";
-      context.stroke();
-    };
-    const observer = new ResizeObserver(resize);
-    observer.observe(canvas);
-    return () => observer.disconnect();
-  }, []);
-
-  const [x, y] = schematic[order.step];
-  return <section className="trip-map" aria-label="Mapa do trajeto simulado">
-    <div className="trip-map-scene" style={{ transform: `scale(${zoom})` }}>
-      <canvas ref={routeLayer} className="trip-map-line" aria-hidden="true" />
-      <img className="trip-map-pin" src="/redesign/destination-pin.webp" alt="Destino" />
-      <span className="trip-map-bike" style={{ left: `${x}%`, top: `${y}%` }}
-        role="img" aria-label="Posição simulada do entregador"><img src="/redesign/courier-pin.webp" alt="" /></span>
-    </div>
-    <span className="trip-map-label"><Route size={21} aria-hidden="true" /> Trajeto simulado</span>
-    <span className="trip-map-city">Maringá</span>
-    <div className="trip-map-controls" role="group" aria-label="Zoom do mapa">
-      <button type="button" aria-label="Aproximar mapa" disabled={zoom >= 1.5}
-        onClick={() => setZoom(value => Math.min(1.5, value + .25))}><Plus size={18} /></button>
-      <button type="button" aria-label="Afastar mapa" disabled={zoom <= 1}
-        onClick={() => setZoom(value => Math.max(1, value - .25))}><Minus size={18} /></button>
-    </div>
   </section>;
 }
 
@@ -463,8 +409,9 @@ export default function DemoPage() {
               {order.sharing ? "Pausar trajeto" : order.step ? "Continuar trajeto" : "Simular movimento"}
             </button>}
         </section>
-        <IllustratedMap key={order.id} order={order} />
-        <Timeline status={order.status} />
+        <DeliveryTrackingMap key={order.id} status={order.status} step={order.step} destinationLabel={order.destination}>
+          <Timeline status={order.status} />
+        </DeliveryTrackingMap>
       </div>}
       {view === "customer" && <>
         <div className="trip-customer-grid">
@@ -478,9 +425,10 @@ export default function DemoPage() {
               {order.ready ? <>Pronto confirmado <Check size={20} /></> : <>Estou pronto para receber <ArrowRight size={22} /></>}
             </Pill>}
           </div><img className="trip-art" src="/redesign/courier.webp" alt="" /></section>
-          <IllustratedMap key={order.id} order={order} />
+          <DeliveryTrackingMap key={order.id} status={order.status} step={order.step} destinationLabel={order.destination}>
+            <Timeline status={order.status} title />
+          </DeliveryTrackingMap>
         </div>
-        <Timeline status={order.status} title />
       </>}
       <footer className="trip-footer">
         <span>Dados fictícios salvos neste navegador.</span>
