@@ -201,35 +201,6 @@
 .trip-customer-hero h2 { margin-top: clamp(19px, 2.4vw, 36px); }
 .trip-customer-hero .trip-pill { min-height: 60px; }
 
-.trip-map {
-  position: relative;
-  min-width: 0;
-  min-height: 315px;
-  isolation: isolate;
-  overflow: hidden;
-  background: #e6e8f4;
-  border-radius: var(--trip-radius);
-  border: 6px solid #fff;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 9px;
-  padding: 19px;
-}
-.trip-map-scene { position: absolute; inset: 0; background: url("/redesign/simulated-map.webp") center / cover; transition: transform .25s ease; }
-.trip-map-bike img { width: 100%; height: 100%; object-fit: contain; }
-.trip-map-line { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-.trip-map-label { position: relative; display: inline-flex; align-items: center; gap: 8px; padding: 9px 13px; min-height: 44px; border: 0; border-radius: 100px; font-weight: 750 !important; background: #fff; }
-.trip-map-controls { position: absolute; right: 14px; bottom: 14px; display: grid; gap: 2px; overflow: hidden; border: 1px solid #dce0ed; border-radius: 12px; background: #e5e8f2; }
-.trip-map-controls button { width: 42px; height: 42px; padding: 0; display: grid; place-items: center; border: 0; background: #fff; }
-.trip-map-controls button:hover:not(:disabled) { background: #edf1ff; }
-.trip-map-controls button:disabled { color: #686c7d; background: #f4f4f9; }
-.trip-map-controls button:focus-visible { outline-offset: -4px; }
-.trip-map-city { position: relative; align-self: flex-start; padding: 6px 10px; border-radius: 100px; background: #f8f9ff; color: #494c61; font-weight: 750; font-size: clamp(16px, 1.8vw, 26px); }
-.trip-map-pin, .trip-map-bike { position: absolute; pointer-events: none; }
-.trip-map-pin { width: clamp(38px, 3.7vw, 55px); height: auto; left: 84%; top: 28%; transform: translate(-50%, -78%); }
-.trip-map-bike { width: 70px; height: 70px; transform: translate(-50%, -50%); transition: top .45s, left .45s; }
-
 .trip-next { padding: clamp(19px, 2vw, 30px); }
 .trip-next h2 { margin-bottom: 15px; }
 .trip-next-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 11px; }
@@ -288,7 +259,6 @@
   .trip-customer-hero { margin-right: 0; border-radius: var(--trip-radius); }
   .trip-customer-hero .trip-art { right: 0; }
   .trip-summary { grid-template-columns: 1fr 1fr; grid-template-rows: auto; gap: 12px; }
-  .trip-courier-grid .trip-map, .trip-customer-grid .trip-map { min-height: 340px; }
   .trip-timeline-wide { display: grid; gap: 18px; }
   .trip-timeline h2 { font-size: 26px; }
 }
@@ -419,11 +389,6 @@
   .trip-customer-hero .trip-art { width: 39%; height: 63%; right: 5px; bottom: 65px; }
   .trip-next h2 { margin-bottom: 12px; }
   .trip-next-actions > .trip-pill { width: 100%; justify-content: space-between; }
-  .trip-courier-grid .trip-map, .trip-customer-grid .trip-map { min-height: 235px; padding: 9px; }
-  .trip-map-pin { width: 31px; transform: translate(-50%, -72%); }
-  .trip-map-city { padding-block: 4px; }
-  .trip-map-bike { width: 48px; height: 48px; }
-  .trip-map-label { font-size: 13px !important; }
   .trip-timeline, .trip-timeline-wide { padding: 19px 11px; }
   .trip-timeline li { font-size: 12px; }
   .trip-stage-icon { width: 45px; height: 45px; }
@@ -447,7 +412,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .trip-map-bike, .trip-map-scene, .trip-glass-lens, .trip-header nav svg { transition: none; }
   .trip-header nav button:active svg { transform: none; }
 }
 
@@ -457,7 +421,6 @@
   .trip-shop-hero { min-height: clamp(330px, 26.3vw, 385px); padding-block: 22px; }
   .trip-shop-hero .trip-art { right: 4%; bottom: 4%; width: 55%; height: 90%; }
   .trip-orders { margin-top: 23px; }
-  .trip-courier-grid > .trip-map { grid-column: 2; grid-row: 1; }
   .trip-courier-grid > .trip-next { grid-column: 1; grid-row: 2; }
   .trip-heading > .trip-pill { min-height: 62px; padding-inline: 34px; }
   .trip-courier-hero .trip-art { width: 59%; right: 3.5%; bottom: 6%; height: 90%; }
