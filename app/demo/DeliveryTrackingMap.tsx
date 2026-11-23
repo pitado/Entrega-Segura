@@ -62,7 +62,6 @@ function MapCanvas({ step, routePoints, expanded }: {
 
   useEffect(() => {
     let disposed = false;
-    let created: LibreMap | null = null;
 
     async function prepare() {
       try {
@@ -76,7 +75,6 @@ function MapCanvas({ step, routePoints, expanded }: {
           pitch: 0,
           attributionControl: false,
         });
-        created = instance;
         map.current = instance;
         instance.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-left");
 
@@ -137,8 +135,8 @@ function MapCanvas({ step, routePoints, expanded }: {
     return () => {
       disposed = true;
       courier.current = null;
+      map.current?.remove();
       map.current = null;
-      created?.remove();
     };
     // This component mounts separately for the compact and expanded maps.
     // eslint-disable-next-line react-hooks/exhaustive-deps
