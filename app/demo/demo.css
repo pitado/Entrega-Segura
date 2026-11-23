@@ -468,3 +468,23 @@
   .trip-timeline-wide .trip-stage-icon { width: 82px; height: 82px; }
   .trip-timeline-wide li:not(:last-child)::after { top: 41px; }
 }
+
+/* Customer-facing illustration, separate from the courier's existing artwork. */
+.trip-customer-hero .trip-customer-art {
+  width: min(43%, 310px);
+  max-height: 95%;
+  right: clamp(5px, 1.7vw, 22px);
+  bottom: 0;
+  object-fit: contain;
+  object-position: center bottom;
+  pointer-events: none;
+}
+@media (max-width: 580px) {
+  .trip-customer-hero .trip-customer-art {
+    width: 44%;
+    height: 76%;
+    right: 3px;
+    bottom: 8%;
+    object-position: right bottom;
+  }
+}
