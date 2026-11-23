@@ -29,6 +29,7 @@
 .trip-courier-marker img, .trip-destination-marker img { display: block; width: 100%; height: auto; }
 .trip-courier-marker img, .trip-static-courier { filter: drop-shadow(0 2px 2px #18194648); }
 .trip-destination-marker img, .trip-static-destination { filter: drop-shadow(0 2px 2px #8144153d); }
+.trip-map-canvas[data-at-destination="true"] :is(.trip-courier-marker, .trip-static-courier) { visibility: hidden; }
 
 .trip-map-overlay {
   position: absolute;
@@ -133,7 +134,7 @@
   background: #248548;
   box-shadow: 0 0 0 3px #5cd38c38;
 }
-:is(.trip-tracking-module, .trip-map-fullscreen) .trip-timeline { display: block; padding: 11px 0 4px; border-radius: 0; background: transparent; }
+:is(.trip-tracking-module, .trip-map-fullscreen) .trip-timeline { display: block; min-height: 0; padding: 11px 0 4px; border-radius: 0; background: transparent; }
 :is(.trip-tracking-module, .trip-map-fullscreen) .trip-timeline h2 { display: none; }
 :is(.trip-tracking-module, .trip-map-fullscreen) .trip-timeline li { font-size: clamp(11px, 1.04vw, 14px); gap: 6px; }
 :is(.trip-tracking-module, .trip-map-fullscreen) .trip-stage-icon {

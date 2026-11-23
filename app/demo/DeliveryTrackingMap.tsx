@@ -252,7 +252,7 @@ function MapCanvas({ step, routePoints, expanded, header, footer }: {
     (instance?.getSource("entrega-travelled") as GeoJSONSource | undefined)?.setData(routeFeature(travelled));
   }, [routePoints, travelled, mapState]);
 
-  return <div ref={scene} className="trip-map-canvas" data-map-state={mapState}>
+  return <div ref={scene} className="trip-map-canvas" data-map-state={mapState} data-at-destination={step === LAST_STEP}>
     <div className="trip-map-static" aria-hidden="true">
       <svg viewBox="0 0 100 100" preserveAspectRatio="none">
         <path d={previewPath} className="trip-preview-outline" />
