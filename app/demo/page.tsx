@@ -527,7 +527,7 @@ export default function DemoPage() {
             {order.status !== "delivered" && <Pill disabled={order.ready} onClick={() => move({ ready: true })}>
               {order.ready ? <>Pronto confirmado <Check size={20} /></> : <>Estou pronto para receber <ArrowRight size={22} /></>}
             </Pill>}
-          </div><img className="trip-art" src="/redesign/courier.webp" alt="" /></section>
+          </div><img className="trip-art trip-customer-art" src="/redesign/customer-tracking.svg" alt="" /></section>
           <DeliveryTrackingMap key={order.id} status={order.status} step={order.step} destinationLabel={order.destination}>
             <Timeline status={order.status} title />
           </DeliveryTrackingMap>
