@@ -579,7 +579,7 @@ export default function DemoPage() {
               {order.sharing ? "Pausar trajeto" : order.step ? "Continuar trajeto" : "Simular movimento"}
             </button>}
         </section>
-        <DeliveryTrackingMap key={order.id} status={order.status} step={order.step} destinationLabel={order.destination}>
+        <DeliveryTrackingMap key={order.id} orderId={order.id} status={order.status} step={order.step} destinationLabel={order.destination}>
           <Timeline status={order.status} />
         </DeliveryTrackingMap>
       </div>}
@@ -598,7 +598,7 @@ export default function DemoPage() {
               {order.ready ? <>Pronto confirmado <Check size={20} /></> : <>Estou pronto para receber <ArrowRight size={22} /></>}
             </Pill>}
           </section>
-          <DeliveryTrackingMap key={order.id} status={order.status} step={order.step} destinationLabel={order.destination}>
+          <DeliveryTrackingMap key={order.id} orderId={order.id} status={order.status} step={order.step} destinationLabel={order.destination}>
             <Timeline status={order.status} title />
           </DeliveryTrackingMap>
         </div>

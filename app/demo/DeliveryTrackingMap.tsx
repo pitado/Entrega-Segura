@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode, type CSSProperties } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { Expand, Minimize2, Minus, Navigation, Plus, Route, X, Clock3, LocateFixed } from "lucide-react";
-import type { Map as LibreMap, Marker as LibreMarker, GeoJSONSource } from "maplibre-gl";
+import { ChevronDown, Clock3, Expand, LocateFixed, Minus, Navigation, Plus, Route, X } from "lucide-react";
+import type { GeoJSONSource, Map as LibreMap, Marker as LibreMarker } from "maplibre-gl";
 import { wazeDirectionsUrl } from "../../lib/navigation";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./delivery-map.css";
@@ -11,15 +11,15 @@ import "./delivery-map.css";
 type Coordinate = [number, number];
 type DeliveryStatus = "preparing" | "on_route" | "arrived" | "delivered";
 type RouteResponse = { points?: number[][]; minutes?: number; distanceKm?: number };
-type RouteEstimate = { minutes: number; distanceKm: number };
+type Directions = { step: number; points: Coordinate[]; minutes?: number; distanceKm?: number };
 type Props = {
+  orderId: number;
   status: DeliveryStatus;
   step: number;
   destinationLabel: string;
   children: ReactNode;
 };
 
-// These are the existing demo's geographic waypoints, not a real courier GPS feed.
 const DEMO_PATH: Coordinate[] = [
   [-51.93566, -23.42690], [-51.93502, -23.42635],
   [-51.93420, -23.42575], [-51.93347, -23.42513],
@@ -28,8 +28,18 @@ const DEMO_PATH: Coordinate[] = [
   [-51.92980, -23.42218], [-51.92915, -23.42154],
   [-51.92850, -23.42083], [-51.92776, -23.42018],
 ];
-const finalPosition = DEMO_PATH[DEMO_PATH.length - 1];
-const styleUrl = "https://tiles.openfreemap.org/styles/positron";
+const LAST_STEP = DEMO_PATH.length - 1;
+const DESTINATION = DEMO_PATH[LAST_STEP];
+const SCOOTER_ICON = "/icons/entrega-moto.webp";
+const DESTINATION_ICON = "/icons/entrega-destino.webp";
+const COMPACT_PREVIEW_PATH = "M12 77 C20 77 23 72 29 68 S38 68 44 62 S47 53 54 52 S63 51 69 45 S77 46 83 42";
+const FULL_PREVIEW_PATH = "M12 68 C20 68 23 65 29 61 S38 61 44 55 S47 45 54 43 S63 43 69 35 S77 33 83 26";
+const statusLabels: Record<DeliveryStatus, string> = {
+  preparing: "Aguardando saída",
+  on_route: "Entrega em andamento",
+  arrived: "Entregador no destino",
+  delivered: "Entrega concluída",
+};
 
 function routeFeature(coordinates: Coordinate[]) {
   return {
@@ -38,30 +48,91 @@ function routeFeature(coordinates: Coordinate[]) {
     geometry: { type: "LineString" as const, coordinates },
   };
 }
+
 function validLine(points: unknown): points is Coordinate[] {
   return Array.isArray(points) && points.length >= 2 && points.length <= 5000 &&
     points.every(point => Array.isArray(point) && point.length >= 2 &&
-      typeof point[0] === "number" && Number.isFinite(point[0]) && Math.abs(point[0]) <= 180 &&
-      typeof point[1] === "number" && Number.isFinite(point[1]) && Math.abs(point[1]) <= 90);
+      Number.isFinite(point[0]) && Math.abs(point[0]) <= 180 &&
+      Number.isFinite(point[1]) && Math.abs(point[1]) <= 90);
 }
 
-function MapCanvas({ step, routePoints, expanded }: {
+function mapMarker(className: string, imageUrl: string, label: string) {
+  const element = document.createElement("div");
+  element.className = className;
+  element.setAttribute("role", "img");
+  element.setAttribute("aria-label", label);
+  const image = document.createElement("img");
+  image.src = imageUrl;
+  image.alt = "";
+  element.appendChild(image);
+  return element;
+}
+
+function MapCanvas({ step, routePoints, expanded, header, footer }: {
   step: number;
   routePoints: Coordinate[];
-  expanded: boolean;
+  expanded?: boolean;
+  header: ReactNode;
+  footer?: ReactNode;
 }) {
+  const scene = useRef<HTMLDivElement>(null);
   const container = useRef<HTMLDivElement>(null);
+  const head = useRef<HTMLDivElement>(null);
+  const sheet = useRef<HTMLDivElement>(null);
   const map = useRef<LibreMap | null>(null);
   const courier = useRef<LibreMarker | null>(null);
-  const routeRef = useRef(routePoints);
-  const [loaded, setLoaded] = useState(false);
-  const [unavailable, setUnavailable] = useState(false);
-  const current = DEMO_PATH[Math.max(0, Math.min(DEMO_PATH.length - 1, step))];
+  const fallbackBike = useRef<HTMLImageElement>(null);
+  const fallbackRoute = useRef<SVGPathElement>(null);
+  const fallbackTravelled = useRef<SVGPolylineElement>(null);
+  const previewProgress = useRef(step / LAST_STEP);
+  const current = DEMO_PATH[step];
+  const previewPath = expanded ? FULL_PREVIEW_PATH : COMPACT_PREVIEW_PATH;
+  const [mapState, setMapState] = useState<"loading" | "ready" | "fallback">("loading");
+  const travelled = useMemo(() => step === 0 ? [DEMO_PATH[0], DEMO_PATH[0]] : DEMO_PATH.slice(0, step + 1), [step]);
+  const latest = useRef({ routePoints, travelled, current });
 
-  useEffect(() => { routeRef.current = routePoints; }, [routePoints]);
+  useEffect(() => { latest.current = { routePoints, travelled, current }; }, [routePoints, travelled, current]);
+
+  function fitRoute(duration: number) {
+    const instance = map.current;
+    if (!instance || !container.current) return;
+    const { clientWidth: width, clientHeight: height } = container.current;
+    const top = (head.current?.offsetHeight ?? 0) + 18;
+    const bottom = (sheet.current?.offsetHeight ?? 0) + (expanded ? 18 : 35);
+    const edge = Math.min(48, Math.floor(width * .16));
+    const padding = {
+      top: Math.min(top, Math.floor(height * .35)),
+      bottom: Math.min(bottom, Math.floor(height * .5)),
+      left: edge,
+      right: edge,
+    };
+    let west = DESTINATION[0], south = DESTINATION[1], east = west, north = south;
+    for (const [lng, lat] of latest.current.routePoints) {
+      west = Math.min(west, lng);
+      south = Math.min(south, lat);
+      east = Math.max(east, lng);
+      north = Math.max(north, lat);
+    }
+    instance.fitBounds([[west, south], [east, north]], { padding, maxZoom: 15.5, duration });
+  }
+
+  useEffect(() => {
+    if (!expanded || !sheet.current || !scene.current) return;
+    const overlay = sheet.current;
+    const root = scene.current;
+    const resize = new ResizeObserver(() => {
+      root.style.setProperty("--trip-sheet-height", overlay.offsetHeight + "px");
+    });
+    resize.observe(overlay);
+    return () => resize.disconnect();
+  }, [expanded]);
 
   useEffect(() => {
     let disposed = false;
+    let ready = false;
+    const deadline = window.setTimeout(() => {
+      if (!ready) setMapState("fallback");
+    }, 10000);
 
     async function prepare() {
       try {
@@ -69,259 +140,282 @@ function MapCanvas({ step, routePoints, expanded }: {
         if (disposed || !container.current) return;
         const instance = new maplibregl.Map({
           container: container.current,
-          style: styleUrl,
+          style: "https://tiles.openfreemap.org/styles/positron",
           center: [-51.9315, -23.424],
           zoom: 13.2,
-          pitch: 0,
           attributionControl: false,
+          cooperativeGestures: !expanded,
         });
         map.current = instance;
         instance.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-left");
 
-        const scooterElement = document.createElement("div");
-        scooterElement.className = "trip-courier-marker";
-        const scooterImage = document.createElement("img");
-        scooterImage.src = "/icons/entrega-moto-v1.svg";
-        scooterImage.alt = "";
-        scooterElement.appendChild(scooterImage);
-        courier.current = new maplibregl.Marker({ element: scooterElement, anchor: "center" })
-          .setLngLat(current).addTo(instance);
+        courier.current = new maplibregl.Marker({
+          element: mapMarker("trip-courier-marker", SCOOTER_ICON, "Posição do entregador"),
+          anchor: "bottom",
+        }).setLngLat(latest.current.current).addTo(instance);
 
-        const destinationElement = document.createElement("div");
-        destinationElement.className = "trip-destination-marker";
-        const destinationImage = document.createElement("img");
-        destinationImage.src = "/icons/entrega-destino-v1.svg";
-        destinationImage.alt = "";
-        destinationElement.appendChild(destinationImage);
-        new maplibregl.Marker({ element: destinationElement, anchor: "bottom" })
-          .setLngLat(finalPosition).addTo(instance);
+        new maplibregl.Marker({
+          element: mapMarker("trip-destination-marker", DESTINATION_ICON, "Destino da entrega"),
+          anchor: "bottom",
+        }).setLngLat(DESTINATION).addTo(instance);
 
-        instance.on("error", event => { if (!disposed && /style|source|tile/i.test(String(event.error?.message || ""))) setUnavailable(true); });
+        instance.on("error", ({ error }) => {
+          if (!disposed && !ready && /style|source|tile|fetch|network|webgl/i.test(error?.message ?? "")) {
+            setMapState("fallback");
+          }
+        });
         instance.once("load", () => {
           if (disposed) return;
-          instance.addSource("entrega-route", {
-            type: "geojson",
-            data: routeFeature(routeRef.current),
+          instance.addSource("entrega-route", { type: "geojson", data: routeFeature(latest.current.routePoints) });
+          instance.addSource("entrega-travelled", { type: "geojson", data: routeFeature(latest.current.travelled) });
+          const layout = { "line-cap": "round", "line-join": "round" } as const;
+          instance.addLayer({
+            id: "entrega-route-outline", type: "line", source: "entrega-route", layout,
+            paint: { "line-color": "#fff", "line-width": 11 },
           });
           instance.addLayer({
-            id: "entrega-route-outline",
-            type: "line",
-            source: "entrega-route",
-            layout: { "line-cap": "round", "line-join": "round" },
-            paint: { "line-color": "#fff", "line-width": 12, "line-opacity": 0.96 },
+            id: "entrega-route-main", type: "line", source: "entrega-route", layout,
+            paint: { "line-color": "#a4aff7", "line-width": 6.5 },
           });
           instance.addLayer({
-            id: "entrega-route-main",
-            type: "line",
-            source: "entrega-route",
-            layout: { "line-cap": "round", "line-join": "round" },
-            paint: { "line-color": "#667ff4", "line-width": 7 },
+            id: "entrega-route-travelled", type: "line", source: "entrega-travelled", layout,
+            paint: { "line-color": "#5465ec", "line-width": 6.5 },
           });
-          const bounds = new maplibregl.LngLatBounds();
-          DEMO_PATH.forEach(position => bounds.extend(position));
-          instance.fitBounds(bounds, {
-            padding: expanded
-              ? { top: 170, bottom: 260, left: 45, right: 45 }
-              : { top: 48, bottom: 48, left: 45, right: 45 },
-            maxZoom: 15.5,
-            duration: 0,
-          });
-          setLoaded(true);
-          setUnavailable(false);
+          fitRoute(0);
+          ready = true;
+          window.clearTimeout(deadline);
+          setMapState("ready");
         });
       } catch {
-        if (!disposed) setUnavailable(true);
+        if (!disposed) setMapState("fallback");
       }
     }
+
     void prepare();
     return () => {
       disposed = true;
+      window.clearTimeout(deadline);
       courier.current = null;
       map.current?.remove();
       map.current = null;
     };
-    // This component mounts separately for the compact and expanded maps.
+    // The embedded and expanded map have independent viewports.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [expanded]);
 
   useEffect(() => {
-    const marker = courier.current;
-    if (!marker) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      marker.setLngLat(current);
-      return;
-    }
-    // Animate movement between simulated GPS points rather than jumping.
-    const previous = marker.getLngLat();
+    const destination = step / LAST_STEP;
+    const start = previewProgress.current;
+    const origin = courier.current?.getLngLat();
+    const path = fallbackRoute.current;
+    const pathLength = path?.getTotalLength() ?? 0;
     const started = performance.now();
     let frame = 0;
+
+    const draw = (t: number) => {
+      const progress = start + (destination - start) * t;
+      previewProgress.current = progress;
+      if (path && fallbackBike.current) {
+        const point = path.getPointAtLength(pathLength * progress);
+        fallbackBike.current.style.left = point.x + "%";
+        fallbackBike.current.style.top = point.y + "%";
+        const samples = Math.ceil(progress * 36);
+        const travelledPoints = [];
+        for (let index = 0; index <= samples && samples > 0; index++) {
+          const sample = path.getPointAtLength(pathLength * progress * index / samples);
+          travelledPoints.push(sample.x + "," + sample.y);
+        }
+        fallbackTravelled.current?.setAttribute("points", travelledPoints.join(" "));
+      }
+      courier.current?.setLngLat(origin ? [
+        origin.lng + (current[0] - origin.lng) * t,
+        origin.lat + (current[1] - origin.lat) * t,
+      ] : current);
+    };
+    if (start === destination || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      draw(1);
+      return;
+    }
     const animate = (now: number) => {
-      const progress = Math.min(1, (now - started) / 850);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      marker.setLngLat([
-        previous.lng + (current[0] - previous.lng) * eased,
-        previous.lat + (current[1] - previous.lat) * eased,
-      ]);
-      if (progress < 1) frame = requestAnimationFrame(animate);
+      const t = Math.min(1, (now - started) / 750);
+      draw(1 - Math.pow(1 - t, 3));
+      if (t < 1) frame = requestAnimationFrame(animate);
     };
     frame = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(frame);
-  }, [current]);
+  }, [current, step]);
 
   useEffect(() => {
-    if (!loaded) return;
-    const source = map.current?.getSource("entrega-route") as GeoJSONSource | undefined;
-    source?.setData(routeFeature(routePoints));
-  }, [routePoints, loaded]);
-
-  function fitRoute() {
+    if (mapState !== "ready") return;
     const instance = map.current;
-    if (!instance) return;
-    void import("maplibre-gl").then(module => {
-      const bounds = new module.LngLatBounds();
-      DEMO_PATH.forEach(position => bounds.extend(position));
-      instance.fitBounds(bounds, {
-        padding: expanded
-          ? { top: 170, bottom: 260, left: 45, right: 45 }
-          : { top: 48, bottom: 48, left: 45, right: 45 },
-        maxZoom: 15.5,
-        duration: 600,
-      });
-    });
-  }
+    (instance?.getSource("entrega-route") as GeoJSONSource | undefined)?.setData(routeFeature(routePoints));
+    (instance?.getSource("entrega-travelled") as GeoJSONSource | undefined)?.setData(routeFeature(travelled));
+  }, [routePoints, travelled, mapState]);
 
-  return <div className="trip-map-canvas">
+  return <div ref={scene} className="trip-map-canvas" data-map-state={mapState}>
     <div className="trip-map-static" aria-hidden="true">
       <svg viewBox="0 0 100 100" preserveAspectRatio="none">
-        <path d="M13 80 Q29 67 35 69 T53 52 T70 39 T86 23"
-          fill="none" stroke="white" strokeWidth="3.8" strokeLinecap="round" />
-        <path d="M13 80 Q29 67 35 69 T53 52 T70 39 T86 23"
-          fill="none" stroke="#7189f9" strokeWidth="2.4" strokeLinecap="round" />
+        <path d={previewPath} className="trip-preview-outline" />
+        <path ref={fallbackRoute} d={previewPath} className="trip-preview-remaining" />
+        <polyline ref={fallbackTravelled} className="trip-preview-travelled" />
       </svg>
-      <img className="trip-static-courier" src="/icons/entrega-moto-v1.svg" alt="" />
-      <img className="trip-static-destination" src="/icons/entrega-destino-v1.svg" alt="" />
+      <img ref={fallbackBike} className="trip-static-courier" src={SCOOTER_ICON} alt="" />
+      <img className="trip-static-destination" src={DESTINATION_ICON} alt="" />
     </div>
-    <div ref={container} className="trip-map-webgl" aria-label="Mapa interativo de Maringá" />
-    {unavailable && <span className="trip-map-fallback-notice" role="status">Mapa interativo indisponível. Exibindo prévia.</span>}
-    <div className="trip-map-zoom" role="group" aria-label="Controles de mapa">
-      <button type="button" aria-label="Aproximar mapa" disabled={!loaded} onClick={() => map.current?.zoomIn()}><Plus size={19} /></button>
-      <button type="button" aria-label="Afastar mapa" disabled={!loaded} onClick={() => map.current?.zoomOut()}><Minus size={19} /></button>
-      {expanded && <button type="button" aria-label="Mostrar rota inteira" disabled={!loaded} onClick={fitRoute}><LocateFixed size={20} /></button>}
+    <div ref={container} className="trip-map-webgl" aria-label="Mapa interativo de Maringá" aria-hidden={mapState !== "ready"} />
+    <div className="trip-map-overlay">
+      <div ref={head} className="trip-map-overlay-head">{header}</div>
+      <div className="trip-map-tools">
+        {mapState === "fallback" && <span className="trip-map-fallback-notice" role="status">Prévia ilustrativa</span>}
+        <div className="trip-map-zoom" role="group" aria-label="Controles de mapa">
+          <button type="button" aria-label="Aproximar mapa" disabled={mapState !== "ready"} onClick={() => map.current?.zoomIn()}><Plus size={19} aria-hidden="true" /></button>
+          <button type="button" aria-label="Afastar mapa" disabled={mapState !== "ready"} onClick={() => map.current?.zoomOut()}><Minus size={19} aria-hidden="true" /></button>
+          {expanded && <button type="button" aria-label="Mostrar rota inteira" disabled={mapState !== "ready"}
+            onClick={() => fitRoute(window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 550)}><LocateFixed size={19} aria-hidden="true" /></button>}
+        </div>
+      </div>
+      {footer && <div ref={sheet} className="trip-map-overlay-sheet">{footer}</div>}
     </div>
   </div>;
 }
 
-export default function DeliveryTrackingMap({ status, step, destinationLabel, children }: Props) {
+export default function DeliveryTrackingMap({ orderId, status, step, destinationLabel, children }: Props) {
   const [expanded, setExpanded] = useState(false);
-  const [routePoints, setRoutePoints] = useState<Coordinate[]>(DEMO_PATH);
-  const [estimate, setEstimate] = useState<RouteEstimate | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [directions, setDirections] = useState<Directions | null>(null);
+  const dialog = useRef<HTMLDialogElement>(null);
   const openButton = useRef<HTMLButtonElement>(null);
-  const waze = wazeDirectionsUrl({ lat: finalPosition[1], lng: finalPosition[0] });
+  const dragStart = useRef<number | null>(null);
+  const detailsId = useId();
+  const stepIndex = status === "preparing" ? 0 : status === "on_route" ? Math.max(0, Math.min(LAST_STEP, step)) : LAST_STEP;
+  const currentDirections = status === "on_route" && directions?.step === stepIndex ? directions : null;
+  const points = currentDirections?.points;
+  const routePoints = useMemo(() => points && stepIndex < LAST_STEP
+    ? [...DEMO_PATH.slice(0, stepIndex + 1), ...points]
+    : DEMO_PATH, [points, stepIndex]);
+  const waze = wazeDirectionsUrl({ lat: DESTINATION[1], lng: DESTINATION[0] });
+  const caption = statusLabels[status];
 
   useEffect(() => {
-    // Recalculate an ETA only as the simulated delivery advances; never invent it.
+    if (status !== "on_route") return;
     const controller = new AbortController();
-    if (status !== "on_route") {
-      setRoutePoints(DEMO_PATH);
-      setEstimate(null);
-      return () => controller.abort();
-    }
-    setRoutePoints(DEMO_PATH.slice(Math.min(step, DEMO_PATH.length - 2)));
-    setEstimate(null);
     async function loadRoadRoute() {
       try {
         const response = await fetch("/api/maps/route", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ demoStep: Math.max(0, Math.min(DEMO_PATH.length - 1, step)) }),
+          body: JSON.stringify({ demoStep: stepIndex }),
           signal: controller.signal,
         });
         if (!response.ok) return;
         const data = await response.json() as RouteResponse;
         if (controller.signal.aborted || !validLine(data.points)) return;
-        setRoutePoints(data.points);
-        if (typeof data.minutes === "number" && Number.isFinite(data.minutes) &&
-            typeof data.distanceKm === "number" && Number.isFinite(data.distanceKm)) {
-          setEstimate({ minutes: data.minutes, distanceKm: data.distanceKm });
-        }
+        setDirections({
+          step: stepIndex, points: data.points,
+          minutes: Number.isFinite(data.minutes) ? data.minutes : undefined,
+          distanceKm: Number.isFinite(data.distanceKm) ? data.distanceKm : undefined,
+        });
       } catch {
-        // Without configured directions, the route is illustrative and has no ETA.
+        // A simulated route remains visible if the directions provider is unavailable.
       }
     }
     void loadRoadRoute();
     return () => controller.abort();
-  }, [step, status]);
+  }, [status, stepIndex]);
 
   useEffect(() => {
-    if (!expanded) return;
+    if (!expanded || !dialog.current) return;
+    const modal = dialog.current;
+    const opener = openButton.current;
     const previous = document.body.style.overflow;
+    modal.showModal();
     document.body.style.overflow = "hidden";
-    const onEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setExpanded(false);
-    };
-    document.addEventListener("keydown", onEscape);
     return () => {
+      modal.close();
       document.body.style.overflow = previous;
-      document.removeEventListener("keydown", onEscape);
-      openButton.current?.focus();
+      opener?.focus({ preventScroll: true });
     };
   }, [expanded]);
 
-  const progress = status === "preparing" ? 0 : status === "on_route" ? 1 : status === "arrived" ? 2 : 3;
-  const progressStyle = { "--trip-delivery-stage": progress } as CSSProperties;
-  const caption = status === "preparing" ? "Aguardando saída"
-    : status === "on_route" ? "Entrega em andamento"
-    : status === "arrived" ? "Entregador no destino" : "Entrega concluída";
+  function closeMap() {
+    setExpanded(false);
+    setDetailsOpen(false);
+  }
 
   return <>
-    <section className="trip-tracking-module" style={progressStyle} aria-label="Mapa e progresso da entrega">
+    <section className="trip-tracking-module" aria-label="Mapa e progresso da entrega">
       <div className="trip-tracking-viewport">
-        <MapCanvas step={step} routePoints={routePoints} expanded={false} />
-        <div className="trip-map-topbar">
-          <span className="trip-tracking-chip"><Route size={18} aria-hidden="true" /> Trajeto simulado</span>
-          <span className="trip-tracking-city">Maringá</span>
-          <button ref={openButton} type="button" className="trip-tracking-icon-button"
-            aria-label="Ampliar mapa em tela cheia" onClick={() => setExpanded(true)}><Expand size={20} /></button>
-        </div>
+        <MapCanvas step={stepIndex} routePoints={routePoints} header={
+          <div className="trip-map-topbar">
+            <span className="trip-map-chip"><Route size={17} aria-hidden="true" /> Trajeto simulado</span>
+            <span className="trip-map-chip trip-tracking-city">Maringá</span>
+            <button ref={openButton} type="button" className="trip-map-expand" aria-haspopup="dialog"
+              aria-label="Ampliar mapa em tela cheia" onClick={() => setExpanded(true)}>
+              <Expand size={19} aria-hidden="true" /><span>Ampliar</span>
+            </button>
+          </div>
+        } />
       </div>
-      <div className="trip-tracking-progress">
-        <span className="trip-tracking-connector" aria-hidden="true" />
+      <div className="trip-tracking-progress" data-status={status}>
         <div className="trip-tracking-status" aria-live="polite"><span className="trip-tracking-led" />{caption}</div>
         {children}
       </div>
     </section>
     {expanded && createPortal(
-      <div className="trip-map-fullscreen" style={progressStyle} role="dialog" aria-modal="true" aria-label="Acompanhamento do trajeto em tela cheia">
-        <MapCanvas step={step} routePoints={routePoints} expanded />
-        <div className="trip-map-floating-head">
-          <div className="trip-map-title-row">
-            <span className="trip-map-title-icon"><Navigation size={23} /></span>
-            <div className="trip-map-title-copy">
-              <strong>Acompanhando entrega</strong>
-              <span>{destinationLabel} · simulação</span>
+      <dialog ref={dialog} className="trip-map-fullscreen" aria-label="Acompanhamento do trajeto em tela cheia"
+        onCancel={event => { event.preventDefault(); closeMap(); }}>
+        <MapCanvas step={stepIndex} routePoints={routePoints} expanded header={
+          <>
+            <div className="trip-map-floating-head">
+              <img src="/redesign/route-symbol.webp" width={42} height={42} alt="" />
+              <div className="trip-map-title-copy">
+                <strong>Pedido #{orderId}</strong>
+                <span>{destinationLabel}</span>
+              </div>
+              <button type="button" className="trip-map-close" aria-label="Fechar mapa em tela cheia"
+                onClick={closeMap} autoFocus><X size={23} aria-hidden="true" /></button>
             </div>
-            <button type="button" className="trip-map-close" aria-label="Fechar mapa em tela cheia"
-              onClick={() => setExpanded(false)}><X size={23} /></button>
-          </div>
-          <div className="trip-map-metrics">
-            <div><Clock3 size={20} /><span>Chegada estimada<strong>{estimate ? String(estimate.minutes) + " min" : "—"}</strong></span></div>
-            <div><Route size={20} /><span>Distância restante<strong>{estimate ? estimate.distanceKm.toLocaleString("pt-BR") + " km" : "—"}</strong></span></div>
-          </div>
-          {!estimate && <span className="trip-map-metric-note">{status === "on_route" ? "Estimativa indisponível sem serviço de rotas configurado." : "Estimativa disponível após iniciar a viagem."}</span>}
-        </div>
-        <div className="trip-map-bottom-sheet">
-          <span className="trip-map-sheet-handle" aria-hidden="true" />
-          <div className="trip-map-sheet-title"><span className="trip-tracking-led" /><strong>{caption}</strong>
-            <span className="trip-map-demo-pill">Simulação</span></div>
-          {children}
-          {waze && <a href={waze} target="_blank" rel="noopener noreferrer" className="trip-map-waze">
-            Abrir no Waze <Navigation size={20} aria-hidden="true" />
-          </a>}
-          <p className="trip-map-disclaimer">Destino de teste em Maringá. Confira o destino antes de navegar.</p>
-        </div>
-        <button type="button" className="trip-map-collapse" onClick={() => setExpanded(false)}>
-          <Minimize2 size={17} /> Voltar ao site
-        </button>
-      </div>, document.body)}
+            <span className="trip-map-chip trip-map-simulation"><Route size={16} aria-hidden="true" /> Simulação</span>
+          </>
+        } footer={
+          <section className="trip-map-bottom-sheet" data-status={status} aria-label="Progresso e navegação">
+            <div className="trip-map-sheet-grip" aria-hidden="true"
+              onPointerDown={event => {
+                dragStart.current = event.clientY;
+                event.currentTarget.setPointerCapture(event.pointerId);
+              }}
+              onPointerCancel={() => { dragStart.current = null; }}
+              onPointerUp={event => {
+                if (dragStart.current === null) return;
+                const delta = event.clientY - dragStart.current;
+                if (Math.abs(delta) > 26) setDetailsOpen(delta < 0);
+                dragStart.current = null;
+              }}>
+              <span />
+            </div>
+            <div className="trip-map-sheet-title" aria-live="polite"><span className="trip-tracking-led" />{caption}</div>
+            {children}
+            <div className="trip-map-sheet-actions">
+              <button type="button" className="trip-map-details-toggle" aria-expanded={detailsOpen} aria-controls={detailsId}
+                onClick={() => setDetailsOpen(open => !open)}>
+                {detailsOpen ? "Ocultar detalhes" : "Ver detalhes"} <ChevronDown size={17} aria-hidden="true" />
+              </button>
+              {waze && <a href={waze} target="_blank" rel="noopener noreferrer" className="trip-map-waze">
+                Abrir no Waze <Navigation size={17} aria-hidden="true" />
+              </a>}
+            </div>
+            <div id={detailsId} className="trip-map-details" data-open={detailsOpen} inert={!detailsOpen} aria-hidden={!detailsOpen}>
+              <div className="trip-map-details-content">
+                <dl className="trip-map-metrics">
+                  <div><Clock3 size={18} aria-hidden="true" /><dt>Chegada estimada</dt><dd>{currentDirections?.minutes != null ? currentDirections.minutes + " min" : "—"}</dd></div>
+                  <div><Route size={18} aria-hidden="true" /><dt>Distância restante</dt><dd>{currentDirections?.distanceKm != null ? currentDirections.distanceKm.toLocaleString("pt-BR") + " km" : "—"}</dd></div>
+                </dl>
+                {status === "on_route" && currentDirections?.minutes == null && <p>Estimativa indisponível para este trajeto.</p>}
+                <p>Destino simulado em Maringá. Confira o endereço no Waze antes de navegar.</p>
+              </div>
+            </div>
+          </section>
+        } />
+      </dialog>, document.body)}
   </>;
 }
