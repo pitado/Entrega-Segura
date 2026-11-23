@@ -145,7 +145,27 @@ function MapCanvas({ step, routePoints, expanded }: {
   }, [expanded]);
 
   useEffect(() => {
-    courier.current?.setLngLat(current);
+    const marker = courier.current;
+    if (!marker) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      marker.setLngLat(current);
+      return;
+    }
+    // Animate movement between simulated GPS points rather than jumping.
+    const previous = marker.getLngLat();
+    const started = performance.now();
+    let frame = 0;
+    const animate = (now: number) => {
+      const progress = Math.min(1, (now - started) / 850);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      marker.setLngLat([
+        previous.lng + (current[0] - previous.lng) * eased,
+        previous.lat + (current[1] - previous.lat) * eased,
+      ]);
+      if (progress < 1) frame = requestAnimationFrame(animate);
+    };
+    frame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frame);
   }, [current]);
 
   useEffect(() => {
