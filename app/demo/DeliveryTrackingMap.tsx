@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { Expand, Minimize2, Minus, Navigation, Plus, Route, X, Clock3, LocateFixed } from "lucide-react";
 import type { Map as LibreMap, Marker as LibreMarker, GeoJSONSource } from "maplibre-gl";
@@ -96,6 +96,7 @@ function MapCanvas({ step, routePoints, expanded }: {
         new maplibregl.Marker({ element: destinationElement, anchor: "bottom" })
           .setLngLat(finalPosition).addTo(instance);
 
+        instance.on("error", event => { if (!disposed && /style|source|tile/i.test(String(event.error?.message || ""))) setUnavailable(true); });
         instance.once("load", () => {
           if (disposed) return;
           instance.addSource("entrega-route", {
@@ -126,6 +127,7 @@ function MapCanvas({ step, routePoints, expanded }: {
             duration: 0,
           });
           setLoaded(true);
+          setUnavailable(false);
         });
       } catch {
         if (!disposed) setUnavailable(true);
@@ -197,30 +199,38 @@ export default function DeliveryTrackingMap({ status, step, destinationLabel, ch
   const waze = wazeDirectionsUrl({ lat: finalPosition[1], lng: finalPosition[0] });
 
   useEffect(() => {
+    // Recalculate an ETA only as the simulated delivery advances; never invent it.
     const controller = new AbortController();
+    if (status !== "on_route") {
+      setRoutePoints(DEMO_PATH);
+      setEstimate(null);
+      return () => controller.abort();
+    }
+    setRoutePoints(DEMO_PATH.slice(Math.min(step, DEMO_PATH.length - 2)));
+    setEstimate(null);
     async function loadRoadRoute() {
       try {
         const response = await fetch("/api/maps/route", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ demoStep: 0 }),
+          body: JSON.stringify({ demoStep: Math.max(0, Math.min(DEMO_PATH.length - 1, step)) }),
           signal: controller.signal,
         });
         if (!response.ok) return;
         const data = await response.json() as RouteResponse;
-        if (!validLine(data.points)) return;
+        if (controller.signal.aborted || !validLine(data.points)) return;
         setRoutePoints(data.points);
         if (typeof data.minutes === "number" && Number.isFinite(data.minutes) &&
             typeof data.distanceKm === "number" && Number.isFinite(data.distanceKm)) {
           setEstimate({ minutes: data.minutes, distanceKm: data.distanceKm });
         }
       } catch {
-        // Without configured directions, keep the clearly labeled illustrative route.
+        // Without configured directions, the route is illustrative and has no ETA.
       }
     }
     void loadRoadRoute();
     return () => controller.abort();
-  }, []);
+  }, [step, status]);
 
   useEffect(() => {
     if (!expanded) return;
@@ -237,12 +247,14 @@ export default function DeliveryTrackingMap({ status, step, destinationLabel, ch
     };
   }, [expanded]);
 
+  const progress = status === "preparing" ? 0 : status === "on_route" ? 1 : status === "arrived" ? 2 : 3;
+  const progressStyle = { "--trip-delivery-stage": progress } as CSSProperties;
   const caption = status === "preparing" ? "Aguardando saída"
     : status === "on_route" ? "Entrega em andamento"
     : status === "arrived" ? "Entregador no destino" : "Entrega concluída";
 
   return <>
-    <section className="trip-tracking-module" aria-label="Mapa e progresso da entrega">
+    <section className="trip-tracking-module" style={progressStyle} aria-label="Mapa e progresso da entrega">
       <div className="trip-tracking-viewport">
         <MapCanvas step={step} routePoints={routePoints} expanded={false} />
         <div className="trip-map-topbar">
@@ -253,12 +265,13 @@ export default function DeliveryTrackingMap({ status, step, destinationLabel, ch
         </div>
       </div>
       <div className="trip-tracking-progress">
-        <div className="trip-tracking-status"><span className="trip-tracking-led" />{caption}</div>
+        <span className="trip-tracking-connector" aria-hidden="true" />
+        <div className="trip-tracking-status" aria-live="polite"><span className="trip-tracking-led" />{caption}</div>
         {children}
       </div>
     </section>
     {expanded && createPortal(
-      <div className="trip-map-fullscreen" role="dialog" aria-modal="true" aria-label="Acompanhamento do trajeto em tela cheia">
+      <div className="trip-map-fullscreen" style={progressStyle} role="dialog" aria-modal="true" aria-label="Acompanhamento do trajeto em tela cheia">
         <MapCanvas step={step} routePoints={routePoints} expanded />
         <div className="trip-map-floating-head">
           <div className="trip-map-title-row">
@@ -274,7 +287,7 @@ export default function DeliveryTrackingMap({ status, step, destinationLabel, ch
             <div><Clock3 size={20} /><span>Chegada estimada<strong>{estimate ? String(estimate.minutes) + " min" : "—"}</strong></span></div>
             <div><Route size={20} /><span>Distância restante<strong>{estimate ? estimate.distanceKm.toLocaleString("pt-BR") + " km" : "—"}</strong></span></div>
           </div>
-          {!estimate && <span className="trip-map-metric-note">Estimativa indisponível sem serviço de rotas configurado.</span>}
+          {!estimate && <span className="trip-map-metric-note">{status === "on_route" ? "Estimativa indisponível sem serviço de rotas configurado." : "Estimativa disponível após iniciar a viagem."}</span>}
         </div>
         <div className="trip-map-bottom-sheet">
           <span className="trip-map-sheet-handle" aria-hidden="true" />
