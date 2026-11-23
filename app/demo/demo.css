@@ -195,11 +195,20 @@
 .trip-courier-hero h2, .trip-customer-hero h2 { font-size: clamp(36px, 4.2vw, 63px); }
 .trip-address { display: flex; align-items: flex-start; gap: 8px; }
 .trip-address svg { flex: 0 0 auto; }
-.trip-customer-hero { margin-right: -29px; border-radius: var(--trip-radius) 0 0 var(--trip-radius); padding-right: 36px; }
-.trip-customer-hero .trip-hero-copy { width: 61%; }
-.trip-customer-hero .trip-art { width: 44%; right: 30px; height: 80%; }
-.trip-customer-hero h2 { margin-top: clamp(19px, 2.4vw, 36px); }
-.trip-customer-hero .trip-pill { min-height: 60px; }
+.trip-customer-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+  grid-template-areas: "copy art" "action art";
+  align-content: center;
+  column-gap: clamp(12px, 2vw, 28px);
+  margin-right: -29px;
+  border-radius: var(--trip-radius) 0 0 var(--trip-radius);
+  padding-right: calc(clamp(23px, 2.5vw, 39px) + 20px);
+}
+.trip-customer-hero .trip-hero-copy { grid-area: copy; width: auto; }
+.trip-customer-art { grid-area: art; justify-self: center; display: block; width: 100%; max-width: 265px; height: auto; }
+.trip-customer-hero h2 { margin-top: clamp(15px, 1.6vw, 24px); text-wrap: balance; }
+.trip-customer-hero .trip-pill { grid-area: action; justify-self: start; margin-top: 16px; min-height: 53px; }
 
 .trip-next { padding: clamp(19px, 2vw, 30px); }
 .trip-next h2 { margin-bottom: 15px; }
@@ -256,8 +265,7 @@
   .trip-brand { flex-basis: 46px; height: 46px; border-radius: 12px; }
   .trip-merchant-grid, .trip-courier-grid, .trip-customer-grid { grid-template-columns: 1fr; gap: 12px; }
   .trip-hero { min-height: 300px; }
-  .trip-customer-hero { margin-right: 0; border-radius: var(--trip-radius); }
-  .trip-customer-hero .trip-art { right: 0; }
+  .trip-customer-hero { margin-right: 0; border-radius: var(--trip-radius); padding-right: clamp(23px, 2.5vw, 39px); }
   .trip-summary { grid-template-columns: 1fr 1fr; grid-template-rows: auto; gap: 12px; }
   .trip-timeline-wide { display: grid; gap: 18px; }
   .trip-timeline h2 { font-size: 26px; }
@@ -418,11 +426,14 @@
   .trip-courier-hero h2, .trip-customer-hero h2 { font-size: clamp(28px, 8vw, 42px); }
   .trip-courier-hero .trip-hero-copy { align-self: center; width: 54%; padding-top: 0; }
   .trip-courier-hero .trip-order-number { margin: 14px 0 6px; font-size: 18px; }
-  .trip-customer-hero .trip-hero-copy { width: 100%; }
-  .trip-customer-hero h2 { width: 67%; }
-  .trip-customer-hero p { width: 60%; }
-  .trip-customer-hero .trip-pill { width: 100%; justify-content: space-between; margin-top: 16px; }
-  .trip-customer-hero .trip-art { width: 39%; height: 63%; right: 5px; bottom: 65px; }
+  .trip-customer-hero {
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    grid-template-areas: "copy art" "action action";
+    column-gap: 10px;
+    padding-right: 17px;
+  }
+  .trip-customer-hero h2 { font-size: clamp(24px, 7.4vw, 38px); text-wrap: wrap; }
+  .trip-customer-hero .trip-pill { width: 100%; justify-content: space-between; min-height: 46px; }
   .trip-next h2 { margin-bottom: 12px; }
   .trip-next-actions > .trip-pill { width: 100%; justify-content: space-between; }
   .trip-timeline, .trip-timeline-wide { padding: 19px 11px; }
@@ -462,29 +473,8 @@
   .trip-courier-grid > .trip-next { grid-column: 1; grid-row: 2; }
   .trip-heading > .trip-pill { min-height: 62px; padding-inline: 34px; }
   .trip-courier-hero .trip-art { width: 59%; right: 3.5%; bottom: 6%; height: 90%; }
-  .trip-customer-hero .trip-art { right: 5%; bottom: 7%; width: 44%; height: 85%; }
   .trip-next-actions > .trip-pill { min-height: 64px; padding-inline: 29px; font-size: clamp(17px, 1.7vw, 25px); }
   .trip-timeline-wide { min-height: 195px; }
   .trip-timeline-wide .trip-stage-icon { width: 82px; height: 82px; }
   .trip-timeline-wide li:not(:last-child)::after { top: 41px; }
-}
-
-/* Customer-facing illustration, separate from the courier's existing artwork. */
-.trip-customer-hero .trip-customer-art {
-  width: min(43%, 310px);
-  max-height: 95%;
-  right: clamp(5px, 1.7vw, 22px);
-  bottom: 0;
-  object-fit: contain;
-  object-position: center bottom;
-  pointer-events: none;
-}
-@media (max-width: 580px) {
-  .trip-customer-hero .trip-customer-art {
-    width: 44%;
-    height: 76%;
-    right: 3px;
-    bottom: 8%;
-    object-position: right bottom;
-  }
 }

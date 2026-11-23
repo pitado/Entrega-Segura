@@ -518,16 +518,19 @@ export default function DemoPage() {
       </div>}
       {view === "customer" && <>
         <div className="trip-customer-grid">
-          <section className="trip-hero trip-customer-hero"><div className="trip-hero-copy">
-            <StatusBadge status={order.status} withIcon />
-            <h2>{customerHeadline}</h2>
-            <p>{order.status === "on_route" ? `${order.courier} está levando seu pedido.` :
-              order.status === "arrived" ? `${order.courier} chegou ao destino.` :
-                order.status === "delivered" ? "A entrega foi concluída." : "O estabelecimento confirmou seu pedido."}</p>
+          <section className="trip-hero trip-customer-hero">
+            <div className="trip-hero-copy">
+              <StatusBadge status={order.status} withIcon />
+              <h2>{customerHeadline}</h2>
+              <p>{order.status === "on_route" ? `${order.courier} está levando seu pedido.` :
+                order.status === "arrived" ? `${order.courier} chegou ao destino.` :
+                  order.status === "delivered" ? "A entrega foi concluída." : "O estabelecimento confirmou seu pedido."}</p>
+            </div>
+            <img className="trip-customer-art" src="/redesign/customer.webp" alt="" width={602} height={620} />
             {order.status !== "delivered" && <Pill disabled={order.ready} onClick={() => move({ ready: true })}>
               {order.ready ? <>Pronto confirmado <Check size={20} /></> : <>Estou pronto para receber <ArrowRight size={22} /></>}
             </Pill>}
-          </div><img className="trip-art trip-customer-art" src="/redesign/customer-tracking.svg?v=2" alt="" /></section>
+          </section>
           <DeliveryTrackingMap key={order.id} status={order.status} step={order.step} destinationLabel={order.destination}>
             <Timeline status={order.status} title />
           </DeliveryTrackingMap>
