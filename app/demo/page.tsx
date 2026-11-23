@@ -16,6 +16,7 @@ const statuses = {
 };
 type Status = keyof typeof statuses;
 type View = "merchant" | "courier" | "customer";
+type Departure = { profile: View; direction: "forward" | "backward" };
 type Order = {
   id: number;
   customer: string;
@@ -32,6 +33,7 @@ type Demo = { orders: Order[]; selected: number };
 const storageKey = "entrega-segura-test-trip-v3";
 const priorKey = "entrega-segura-test-trip-v2";
 const views: Record<View, string> = { merchant: "Estabelecimento", courier: "Entregador", customer: "Cliente" };
+const profileOrder = Object.keys(views) as View[];
 const profileIcons = { merchant: Warehouse, courier: Bike, customer: MapPin };
 const stages = Object.keys(statuses) as Status[];
 // Coordinates on the illustrated map, independent of the geographic destination.
@@ -176,12 +178,15 @@ export default function DemoPage() {
   const [demo, setDemo] = useState(initialDemo);
   const [loaded, setLoaded] = useState(false);
   const [view, setView] = useState<View>("merchant");
+  const [departure, setDeparture] = useState<Departure | null>(null);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<Status | "all" | "active">("all");
   const [modal, setModal] = useState<"create" | "details" | "navigation" | null>(null);
   const [feedback, setFeedback] = useState("");
   const [manualLink, setManualLink] = useState("");
   const dialog = useRef<HTMLDialogElement>(null);
+  const lens = useRef<HTMLSpanElement>(null);
+  const lensMotion = useRef<Animation | undefined>(undefined);
   const order = demo.orders.find(item => item.id === demo.selected) ?? demo.orders[0];
 
   useEffect(() => {
@@ -206,7 +211,10 @@ export default function DemoPage() {
         return JSON.stringify(current.orders) === JSON.stringify(next.orders) ? current : { ...next, selected };
       });
     }
-    function onBack() { setDemo(current => readLocation(current)); }
+    function onBack() {
+      setDeparture(null);
+      setDemo(current => readLocation(current));
+    }
     window.addEventListener("storage", sync);
     window.addEventListener("popstate", onBack);
     return () => {
@@ -253,9 +261,33 @@ export default function DemoPage() {
     return () => window.clearTimeout(timer);
   }, [feedback]);
 
+  useEffect(() => {
+    if (!departure) return;
+    // Clear the outgoing panel if the animation is interrupted by a viewport change.
+    const timer = window.setTimeout(() => setDeparture(null), 400);
+    return () => window.clearTimeout(timer);
+  }, [departure]);
+
   function switchView(next: View) {
-    if (next !== view) window.scrollTo({ top: 0, behavior: "instant" });
-    setView(next);
+    if (next !== view) {
+      window.scrollTo({ top: 0, behavior: "instant" });
+      if (window.matchMedia("(max-width: 580px) and (prefers-reduced-motion: no-preference)").matches) {
+        setDeparture({
+          profile: view,
+          direction: profileOrder.indexOf(next) > profileOrder.indexOf(view) ? "forward" : "backward",
+        });
+        lensMotion.current?.cancel();
+        lensMotion.current = lens.current?.animate?.([
+          { transform: "scale(1)" },
+          { transform: "scale(1.12, .92)", offset: .28 },
+          { transform: "scale(.99, 1.015)", offset: .8 },
+          { transform: "scale(1)" },
+        ], { duration: 400, easing: "cubic-bezier(.2, .7, .3, 1)" });
+      } else {
+        setDeparture(null);
+      }
+      setView(next);
+    }
     const url = new URL(window.location.href);
     url.searchParams.set("view", next);
     url.searchParams.set("pedido", String(order.id));
@@ -343,35 +375,18 @@ export default function DemoPage() {
   const google = `https://www.google.com/maps/dir/?api=1&destination=${destination.lat},${destination.lng}&travelmode=driving`;
   const apple = `https://maps.apple.com/?daddr=${destination.lat},${destination.lng}&dirflg=d`;
 
-  if (!loaded) return <main className="trip"><p className="trip-main" role="status">Carregando demonstração…</p></main>;
-
-  return <div className="trip">
-    <header className="trip-header">
-      <div className="trip-header-inner">
-        <span className="trip-brand" aria-hidden="true"><img src="/redesign/route-symbol.webp" alt="" /></span>
-        <nav aria-label="Perfis da demonstração" data-profile={view}>
-          {(Object.keys(views) as View[]).map(profile => {
-            const Icon = profileIcons[profile];
-            return <button key={profile} type="button" aria-label={views[profile]}
-              aria-current={view === profile ? "page" : undefined} onClick={() => switchView(profile)}>
-              <Icon size={21} aria-hidden="true" />
-              <span>{views[profile]}</span>
-            </button>;
-          })}
-        </nav>
-      </div>
-    </header>
-    <main className="trip-main">
+  function renderProfile(profile: View) {
+    return <>
       <div className="trip-heading">
         <div>
-          <h1>{view === "merchant" ? "Pedidos" : view === "courier" ? "Minha entrega" : "Acompanhe seu pedido"}</h1>
-          <p>{view === "merchant" ? "Pedidos, entregador e cliente no mesmo fluxo."
-            : view === "courier" ? `Olá, ${order.courier}. Confira sua próxima etapa.` : `Pedido #${order.id}`}</p>
+          <h1>{profile === "merchant" ? "Pedidos" : profile === "courier" ? "Minha entrega" : "Acompanhe seu pedido"}</h1>
+          <p>{profile === "merchant" ? "Pedidos, entregador e cliente no mesmo fluxo."
+            : profile === "courier" ? `Olá, ${order.courier}. Confira sua próxima etapa.` : `Pedido #${order.id}`}</p>
         </div>
-        {view === "merchant" && <Pill onClick={() => setModal("create")}>Novo pedido <ArrowRight size={22} /></Pill>}
-        {view === "courier" && <Pill onClick={() => setModal("navigation")}><span>Abrir navegação</span><ArrowRight size={22} /></Pill>}
+        {profile === "merchant" && <Pill onClick={() => setModal("create")}>Novo pedido <ArrowRight size={22} /></Pill>}
+        {profile === "courier" && <Pill onClick={() => setModal("navigation")}><span>Abrir navegação</span><ArrowRight size={22} /></Pill>}
       </div>
-      {view === "merchant" && <>
+      {profile === "merchant" && <>
         <div className="trip-merchant-grid">
           <section className="trip-hero trip-shop-hero">
             <div className="trip-hero-copy">
@@ -423,7 +438,7 @@ export default function DemoPage() {
           {matches.length === 0 && <p className="trip-empty" role="status">Nenhum pedido encontrado.</p>}
         </section>
       </>}
-      {view === "courier" && <div className="trip-courier-grid">
+      {profile === "courier" && <div className="trip-courier-grid">
         <section className="trip-hero trip-courier-hero"><div className="trip-hero-copy">
           <StatusBadge status={order.status} withIcon />
           <p className="trip-order-number">Pedido #{order.id}</p>
@@ -452,7 +467,7 @@ export default function DemoPage() {
         <IllustratedMap key={order.id} order={order} />
         <Timeline status={order.status} />
       </div>}
-      {view === "customer" && <>
+      {profile === "customer" && <>
         <div className="trip-customer-grid">
           <section className="trip-hero trip-customer-hero"><div className="trip-hero-copy">
             <StatusBadge status={order.status} withIcon />
@@ -468,11 +483,41 @@ export default function DemoPage() {
         </div>
         <Timeline status={order.status} title />
       </>}
-      <footer className="trip-footer">
-        <span>Dados fictícios salvos neste navegador.</span>
-        <button type="button" onClick={resetDemo}><RefreshCw size={15} /> Reiniciar teste</button>
-      </footer>
-    </main>
+    </>;
+  }
+
+  if (!loaded) return <main className="trip"><p className="trip-main" role="status">Carregando demonstração…</p></main>;
+
+  return <div className="trip">
+    <header className="trip-header">
+      <div className="trip-header-inner">
+        <span className="trip-brand" aria-hidden="true"><img src="/redesign/route-symbol.webp" alt="" /></span>
+        <nav aria-label="Perfis da demonstração" data-profile={view}>
+          <span className="trip-glass-lens" aria-hidden="true"><span ref={lens} /></span>
+          {profileOrder.map(profile => {
+            const Icon = profileIcons[profile];
+            return <button key={profile} type="button" aria-label={views[profile]}
+              aria-current={view === profile ? "page" : undefined} onClick={() => switchView(profile)}>
+              <Icon size={21} aria-hidden="true" />
+              <span>{views[profile]}</span>
+            </button>;
+          })}
+        </nav>
+      </div>
+    </header>
+    <div className="trip-profile-stage" data-direction={departure?.direction}>
+      {departure && <div key={`out-${departure.profile}`}
+        className="trip-main trip-profile-outgoing" data-view={departure.profile} aria-hidden="true" inert>
+        {renderProfile(departure.profile)}
+      </div>}
+      <main key={view} className="trip-main trip-profile-current" data-view={view}>
+        {renderProfile(view)}
+        <footer className="trip-footer">
+          <span>Dados fictícios salvos neste navegador.</span>
+          <button type="button" onClick={resetDemo}><RefreshCw size={15} /> Reiniciar teste</button>
+        </footer>
+      </main>
+    </div>
     <dialog ref={dialog} className="trip-dialog" aria-labelledby="trip-dialog-title" onClose={() => setModal(null)}
       onClick={event => { if (event.target === event.currentTarget) setModal(null); }}>
       {modal && <div className="trip-dialog-body">

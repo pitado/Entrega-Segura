@@ -60,7 +60,7 @@
   font-size: clamp(16px, 1.5vw, 24px);
   font-weight: 750;
 }
-.trip-header nav svg { display: none; }
+.trip-header nav svg, .trip-glass-lens, .trip-profile-outgoing { display: none; }
 .trip-header nav button:hover:not([aria-current]) { background: #eff0f8; }
 .trip-header nav button[aria-current] { background: var(--trip-ink); color: #fff; }
 .trip-live-label { display: inline-flex; align-items: center; gap: 12px; font-weight: 740; }
@@ -71,7 +71,7 @@
 .trip-main { padding-top: clamp(30px, 3.7vw, 60px); padding-bottom: 22px; }
 .trip-heading { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin: 0 0 clamp(24px, 2.6vw, 38px); }
 .trip-heading h1 { font-size: clamp(42px, 5.1vw, 80px); font-weight: 850; }
-.trip-main:has(.trip-merchant-grid) .trip-heading h1 { font-size: clamp(42px, 4.55vw, 70px); }
+.trip-main[data-view="merchant"] .trip-heading h1 { font-size: clamp(42px, 4.55vw, 70px); }
 .trip-heading p { margin-top: 8px; color: var(--trip-subtle); font-size: clamp(16px, 1.55vw, 24px); }
 .trip .trip-pill {
   min-height: 53px;
@@ -323,18 +323,22 @@
   }
   .trip-header nav[data-profile="courier"] { --glass-index: 1; }
   .trip-header nav[data-profile="customer"] { --glass-index: 2; }
-  .trip-header nav::before {
-    content: "";
+  .trip-glass-lens {
+    display: block;
     position: absolute;
     inset: var(--glass-inset) auto var(--glass-inset) var(--glass-inset);
     width: calc((100% - 2 * var(--glass-inset) - 2 * var(--glass-gap)) / 3);
+    pointer-events: none;
+    transform: translateX(calc(var(--glass-index) * (100% + var(--glass-gap))));
+    transition: transform 380ms cubic-bezier(.18, .8, .28, 1);
+  }
+  .trip-glass-lens > span {
+    display: block;
+    height: 100%;
     border: 1px solid #ffffffaa;
     border-radius: 25px;
     background: linear-gradient(145deg, #dce5ffed, #aebffeeb);
     box-shadow: inset 0 1px 1px #ffffffb3, 0 2px 7px #697a9f22;
-    pointer-events: none;
-    transform: translateX(calc(var(--glass-index) * (100% + var(--glass-gap))));
-    transition: transform 440ms cubic-bezier(.22, 1, .36, 1);
   }
   .trip-header nav button {
     position: relative;
@@ -359,17 +363,17 @@
   .trip-header nav button:active svg { transform: scale(.88); }
   .trip-main { padding-top: 20px; padding-bottom: calc(98px + env(safe-area-inset-bottom)); }
   .trip-heading { align-items: flex-start; gap: 9px; margin-bottom: 14px; }
-  .trip-heading h1, .trip-main:has(.trip-merchant-grid) .trip-heading h1 { font-size: clamp(32px, 8.2vw, 43px); }
+  .trip-heading h1, .trip-main[data-view="merchant"] .trip-heading h1 { font-size: clamp(32px, 8.2vw, 43px); }
   .trip-heading p { margin-top: 5px; font-size: 14px; }
   .trip-heading > .trip-pill { flex-shrink: 0; margin-top: 1px; }
   .trip-heading > .trip-pill svg { width: 16px; }
-  .trip-main:has(.trip-courier-grid) .trip-heading { flex-wrap: wrap; }
-  .trip-main:has(.trip-courier-grid) .trip-heading > .trip-pill {
+  .trip-main[data-view="courier"] .trip-heading { flex-wrap: wrap; }
+  .trip-main[data-view="courier"] .trip-heading > .trip-pill {
     background: #fff;
     border-color: #d7dbea;
     color: var(--trip-ink);
   }
-  .trip-main:has(.trip-courier-grid) .trip-heading > .trip-pill:hover { background: #e1e8fd; }
+  .trip-main[data-view="courier"] .trip-heading > .trip-pill:hover { background: #e1e8fd; }
   .trip .trip-pill { min-height: 46px; padding: 9px 15px; font-size: 15px; }
   .trip-hero { padding: 17px; min-height: 198px; }
   .trip-hero-copy { width: 62%; }
@@ -442,14 +446,46 @@
   }
 }
 
+@media (max-width: 580px) and (prefers-reduced-motion: no-preference) {
+  .trip-profile-stage {
+    --trip-enter-x: min(15vw, 62px);
+    --trip-exit-x: calc(-1 * var(--trip-enter-x));
+    position: relative;
+    overflow-x: clip;
+  }
+  .trip-profile-stage[data-direction="backward"] {
+    --trip-enter-x: max(-15vw, -62px);
+  }
+  .trip-profile-stage[data-direction] .trip-profile-current {
+    position: relative;
+    animation: trip-profile-in 360ms cubic-bezier(.18, .8, .28, 1) both;
+  }
+  .trip-profile-outgoing {
+    display: block;
+    position: absolute;
+    inset: 0 0 auto;
+    pointer-events: none;
+    animation: trip-profile-out 240ms ease-out both;
+  }
+  @keyframes trip-profile-in {
+    from { transform: translateX(var(--trip-enter-x)); opacity: 0; }
+    42% { opacity: 1; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  @keyframes trip-profile-out {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(var(--trip-exit-x)); opacity: 0; }
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .trip-map-bike, .trip-map-scene, .trip-header nav::before, .trip-header nav svg { transition: none; }
+  .trip-map-bike, .trip-map-scene, .trip-glass-lens, .trip-header nav svg { transition: none; }
   .trip-header nav button:active svg { transform: none; }
 }
 
 @media (min-width: 831px) {
-  .trip-main:has(.trip-merchant-grid) { padding-top: clamp(24px, 2.7vw, 40px); }
-  .trip-main:has(.trip-merchant-grid) .trip-heading { margin-bottom: 23px; }
+  .trip-main[data-view="merchant"] { padding-top: clamp(24px, 2.7vw, 40px); }
+  .trip-main[data-view="merchant"] .trip-heading { margin-bottom: 23px; }
   .trip-shop-hero { min-height: clamp(330px, 26.3vw, 385px); padding-block: 22px; }
   .trip-shop-hero .trip-art { right: 4%; bottom: 4%; width: 55%; height: 90%; }
   .trip-orders { margin-top: 23px; }
