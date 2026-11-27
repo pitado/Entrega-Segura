@@ -1,4 +1,6 @@
-# Entrega Segura — MVP de entregas
+# Pitou — MVP de entregas
+
+**Site:** [pitou.com.br](https://pitou.com.br).
 
 Aplicação responsiva para **estabelecimento, motoboy e consumidor**, com Next.js 15, Cloudflare Workers/OpenNext, banco Neon PostgreSQL e mapas MapLibre/OpenFreeMap.
 
@@ -25,7 +27,7 @@ Veja [como configurar o Mapbox](docs/maps-setup.md).
 
 ## Configuração do Cloudflare Worker
 
-Worker `entrega-segura2`, GitHub branch `teste-deploy`. Configure em **Settings → Variables and Secrets**:
+Worker `pitou`, GitHub branch `main`. Configure em **Settings → Variables and Secrets**:
 
 | Variável | Tipo | Necessidade |
 |---|---|---|
@@ -61,3 +63,7 @@ Use `TEST_BASE_URL` para direcionar os testes para outra instalação do MVP. Re
 - Cashback financeiro, WhatsApp automático e modelos de IA preditiva **não** fazem parte das funcionalidades operacionais implementadas.
 
 O repositório é um MVP, não uma plataforma de produção pronta para operar entregas com dados reais.
+
+## Licença
+
+Projeto proprietário. Todos os direitos reservados. Consulte [LICENSE](LICENSE).
