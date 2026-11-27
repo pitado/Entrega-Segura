@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "entrega-segura2",
+  "name": "pitou",
   "main": ".open-next/worker.js",
   "keep_vars": true,
   "compatibility_date": "2026-11-09",
