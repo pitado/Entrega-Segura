@@ -6,7 +6,7 @@ O Pitou utiliza o **OpenFreeMap** como mapa de base, renderizado por MapLibre GL
 
 1. Acesse https://account.mapbox.com/ e crie sua conta.
 2. Em https://account.mapbox.com/access-tokens/ crie um token dedicado ao Entrega Segura, com as menores permissões necessárias para consultar Directions. Verifique as regras de cobrança e configure alertas/limites de uso antes de ativar serviços faturados. **Não autorize cobranças sem revisar os preços.**
-3. Abra https://dash.cloudflare.com/ → Workers & Pages → `entrega-segura2` → Settings → Variables and Secrets.
+3. Abra https://dash.cloudflare.com/ → Workers & Pages → `pitou` → Settings → Variables and Secrets.
 4. Crie o secret **`MAPBOX_ACCESS_TOKEN`** e cole seu token no valor. Não precisa copiar o token para GitHub nem enviá-lo nesta conversa.
 5. Salve e publique uma nova versão do Worker.
 6. No celular, abra `/demo` para visualizar a moto e a linha por ruas na simulação. Em `/laboratorio`, inicie sessão Neon e teste os links nos três lados.

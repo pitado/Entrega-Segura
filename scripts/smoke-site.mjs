@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 
-const base=String(process.env.TEST_BASE_URL||"https://entrega-segura2.miguellpitaa.workers.dev").replace(/\/$/,"");
+// TEST_BASE_URL fixa um endereço. Sem ele, usa o domínio próprio e, se ainda
+// não estiver ativo, o endereço workers.dev do mesmo Worker.
+const candidates=(process.env.TEST_BASE_URL?[process.env.TEST_BASE_URL]:["https://pitou.com.br","https://pitou.miguellpitaa.workers.dev"]).map(u=>String(u).replace(/\/$/,""));
+let base=candidates[0];
 const timeoutMs=15000;
 let passed=0, failed=0;
 const issues=[];
@@ -25,13 +28,16 @@ async function check(name,fn){
 }
 async function readyForSmoke(){
  for(let attempt=0;attempt<36;attempt++){
-  try{
-   const cfg=await request("/api/maps/config");
-   if(cfg.status===200&&typeof cfg.body?.mapboxReady==="boolean")return;
-  }catch{}
+  for(const candidate of candidates){
+   base=candidate;
+   try{
+    const cfg=await request("/api/maps/config");
+    if(cfg.status===200&&typeof cfg.body?.mapboxReady==="boolean"){console.log("Testando",base);return;}
+   }catch{}
+  }
   await new Promise(r=>setTimeout(r,5000));
  }
- throw new Error("O Worker atualizado não ficou disponível dentro do prazo.");
+ throw new Error("O Worker não ficou disponível dentro do prazo em: "+candidates.join(", "));
 }
 await readyForSmoke();
 let sessionKey="",courierToken="",consumerToken="",orderId="";

@@ -2,6 +2,7 @@ name: Qualidade do Pitou
 on:
   push:
     branches: [main, teste-deploy]
+  pull_request:
   workflow_dispatch:
 
 permissions:
@@ -26,6 +27,8 @@ jobs:
   smoke:
     name: Teste real do Worker e Neon
     needs: build
+    # O smoke test valida o Worker publicado, não o código do PR.
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 16
     steps:
@@ -35,5 +38,5 @@ jobs:
           node-version: '22'
       - name: Testar páginas, APIs e pedido de demonstração
         env:
-          TEST_BASE_URL: https://entrega-segura2.miguellpitaa.workers.dev
+          TEST_BASE_URL: ${{ vars.TEST_BASE_URL }}
         run: npm run test:smoke
