@@ -36,7 +36,7 @@ export default function AuthForm({ initialMode }: { initialMode: Mode }) {
 
   return <main className="pt pt-auth">
     <div className="pt-auth-side">
-      <a className="pt-auth-brand" href="/" aria-label="Pitou, página inicial"><PitouLogo size={40} /></a>
+      <a className="pt-auth-brand" href="/" aria-label="Pitou, página inicial"><PitouLogo size={40} symbolOnly /></a>
       <div className="pt-auth-center"><div className="pt-auth-card">
         <div className="pt-seg" role="group" aria-label="Escolha">
           <button type="button" aria-pressed={mode === "login"} onClick={() => { setMode("login"); setError(""); }}>Entrar</button>
