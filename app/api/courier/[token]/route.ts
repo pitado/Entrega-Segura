@@ -2,6 +2,7 @@ import { db } from "../../../../lib/db";
 import { fail, ok, readJson } from "../../../../lib/http";
 import { changeStatus, type Status } from "../../../../lib/orders";
 import { hashToken, originAllowed, validAccessToken, validUuid } from "../../../../lib/security";
+import { codeMatches, MAX_CODE_ATTEMPTS } from "../../../../lib/deliveryCode";
 
 export const runtime = "nodejs";
 type Context = { params: Promise<{ token: string }> };
@@ -24,9 +25,10 @@ export async function GET(_req: Request, { params }: Context) {
     const [orders, today] = await Promise.all([
       sql.query(
         `SELECT id,number,customer_name,customer_phone,destination,destination_latitude,destination_longitude,notes,status,customer_ready,
-           total_amount::float8 AS total_amount,cashback_used::float8 AS cashback_used,created_at
+           total_amount::float8 AS total_amount,cashback_used::float8 AS cashback_used,created_at,
+           greatest(0,$2-(SELECT count(*)::int FROM delivery_updates du WHERE du.order_id=orders.id AND du.status='code_failed')) AS code_attempts_left
          FROM orders WHERE courier_id=$1 AND status IN ('preparing','on_route','arrived') AND demo_session_id IS NULL
-         ORDER BY created_at LIMIT 50`, [courier.id]),
+         ORDER BY created_at LIMIT 50`, [courier.id, MAX_CODE_ATTEMPTS]),
       sql.query(
         `SELECT count(*)::int AS delivered FROM orders WHERE courier_id=$1 AND status='delivered'
            AND delivered_at>=date_trunc('day',now() AT TIME ZONE 'America/Sao_Paulo') AT TIME ZONE 'America/Sao_Paulo'`, [courier.id]),
@@ -43,10 +45,26 @@ export async function POST(req: Request, { params }: Context) {
     const body = await readJson(req);
     if (!validUuid(body.order_id)) return fail("Pedido inválido");
     const sql = db();
-    const orders = await sql.query("SELECT id,status FROM orders WHERE id=$1 AND courier_id=$2 AND demo_session_id IS NULL LIMIT 1", [body.order_id, courier.id]);
+    const orders = await sql.query("SELECT id,status,tracking_token FROM orders WHERE id=$1 AND courier_id=$2 AND demo_session_id IS NULL LIMIT 1", [body.order_id, courier.id]);
     if (!orders.length) return fail("Entrega não atribuída a você", 403);
     const current = String(orders[0].status);
     if (body.action === "status") {
+      // Concluir exige o código de entrega que o cliente vê na tela dele.
+      if (body.status === "delivered" && (current === "on_route" || current === "arrived")) {
+        const failedRows = await sql.query("SELECT count(*)::int AS n FROM delivery_updates WHERE order_id=$1 AND status='code_failed'", [body.order_id]);
+        const failed = Number(failedRows[0]?.n) || 0;
+        if (failed >= MAX_CODE_ATTEMPTS) return fail("Muitas tentativas com o código errado. Peça ao estabelecimento para concluir a entrega.", 429);
+        if (!(await codeMatches(String(orders[0].tracking_token), body.code))) {
+          await sql.query("INSERT INTO delivery_updates(order_id,status,actor_type) VALUES($1,'code_failed','courier')", [body.order_id]);
+          const left = MAX_CODE_ATTEMPTS - failed - 1;
+          return fail(left > 0 ? `Código incorreto. Confira com o cliente (${left} tentativa${left === 1 ? "" : "s"} restante${left === 1 ? "" : "s"}).`
+            : "Código incorreto. Peça ao estabelecimento para concluir a entrega.", 422);
+        }
+        const result = await changeStatus(String(body.order_id), "delivered", "courier", { courierId: String(courier.id) });
+        if (!result.ok) return fail(result.error, result.status);
+        await sql.query("INSERT INTO delivery_updates(order_id,status,actor_type) VALUES($1,'code_verified','courier')", [body.order_id]);
+        return ok({ ...result, verified: true });
+      }
       const result = await changeStatus(String(body.order_id), String(body.status) as Status, "courier", { courierId: String(courier.id) });
       return result.ok ? ok(result) : fail(result.error, result.status);
     }

@@ -23,7 +23,8 @@ export async function GET(req: Request) {
         o.total_amount::float8 AS total_amount,o.cashback_used::float8 AS cashback_used,o.cashback_earned::float8 AS cashback_earned,
         CASE WHEN l.is_sharing AND l.recorded_at>now()-interval '2 minutes' THEN l.latitude END AS latitude,
         CASE WHEN l.is_sharing AND l.recorded_at>now()-interval '2 minutes' THEN l.longitude END AS longitude,
-        l.recorded_at AS location_at
+        l.recorded_at AS location_at,
+        EXISTS(SELECT 1 FROM delivery_updates du WHERE du.order_id=o.id AND du.status='code_verified') AS code_verified
         FROM orders o LEFT JOIN couriers c ON c.id=o.courier_id LEFT JOIN delivery_locations l ON l.order_id=o.id
         WHERE o.establishment_id=$1 AND o.demo_session_id IS NULL
           AND (o.status IN ('preparing','on_route','arrived') OR o.updated_at>now()-interval '12 hours')

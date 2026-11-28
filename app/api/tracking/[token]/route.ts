@@ -1,6 +1,7 @@
 import { db } from "../../../../lib/db";
 import { fail, ok, readJson } from "../../../../lib/http";
 import { originAllowed, validUuid } from "../../../../lib/security";
+import { deliveryCode, distanceMeters, point, RELEASE_METERS } from "../../../../lib/deliveryCode";
 
 export const runtime = "nodejs";
 type Context = { params: Promise<{ token: string }> };
@@ -26,8 +27,16 @@ export async function GET(_request: Request, { params }: Context) {
        WHERE o.tracking_token=$1::uuid AND o.demo_session_id IS NULL AND o.created_at>now()-interval '7 days' LIMIT 1`, [token]);
     if (!rows.length) return fail("Entrega não encontrada ou link expirado", 404);
     const { id, ...order } = rows[0];
-    const updates = await sql.query("SELECT status,actor_type,created_at FROM delivery_updates WHERE order_id=$1 ORDER BY created_at DESC LIMIT 12", [id]);
-    return ok({ order, updates });
+    const updates = await sql.query("SELECT status,actor_type,created_at FROM delivery_updates WHERE order_id=$1 AND status<>'code_failed' ORDER BY created_at DESC LIMIT 12", [id]);
+    // Encontro: distância do entregador e o código de entrega, liberado só na chegada.
+    const courier = point(order.latitude, order.longitude), destination = point(order.destination_latitude, order.destination_longitude);
+    const distance = courier && destination ? Math.round(distanceMeters(courier, destination)) : null;
+    const released = order.status === "arrived" || (order.status === "on_route" && distance !== null && distance <= RELEASE_METERS);
+    const codeVerified = updates.some(u => u.status === "code_verified");
+    return ok({
+      order: { ...order, distance_m: distance, delivery_code: released ? await deliveryCode(token) : null, code_verified: codeVerified },
+      updates,
+    });
   } catch { return fail("Serviço indisponível", 503); }
 }
 

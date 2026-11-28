@@ -245,3 +245,50 @@
   .pt-kv dd { margin-bottom: 6px; }
   .pt-product img { width: 88px; height: 88px; border-radius: 22px; }
 }
+
+/* Encontro: código de entrega e radar de proximidade */
+.pt-code-note { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border-radius: 22px; background: var(--lime-soft); color: var(--lime-ink); }
+.pt-code-note b { display: block; font-family: var(--p-display); letter-spacing: -.03em; font-size: 16px; }
+.pt-code-note small { display: block; margin-top: 2px; font-size: 13px; color: rgba(11, 18, 8, .7); line-height: 1.4; }
+.pt-code-icon { flex: none; width: 36px; height: 36px; border-radius: 50%; background: var(--lime-ink); color: var(--lime); display: grid; place-items: center; }
+.pt-code-ok { background: var(--lime); }
+.pt-verified { margin-left: 6px; font-size: 12px; font-weight: 700; color: var(--lime); }
+.pt-code-card { position: relative; overflow: hidden; padding: 20px; border-radius: 32px; background: var(--lime); color: var(--lime-ink); display: grid; gap: 10px; }
+.pt-code-card h2 { color: var(--lime-ink); font-size: 18px; letter-spacing: -.02em; font-family: var(--p-body); }
+.pt-code-chip { justify-self: start; display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; background: rgba(11, 18, 8, .12); font-size: 12px; font-weight: 700; }
+.pt-code-digits { display: flex; gap: 10px; justify-content: space-between; margin-top: 4px; }
+.pt-code-digits span { flex: 1; max-width: 88px; height: 78px; border-radius: 22px; background: var(--lime-ink); color: var(--lime); display: grid; place-items: center; font-family: var(--p-display); font-size: 42px; font-weight: 700; }
+.pt-code-card p { font-size: 15px; font-weight: 600; line-height: 1.35; }
+.pt-code-card small { font-size: 13px; color: rgba(11, 18, 8, .66); line-height: 1.4; }
+.pt-code-locked { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 24px; background: var(--card); border: 1px solid var(--line); }
+.pt-code-locked b { display: block; font-size: 15px; }
+.pt-code-locked small { color: var(--subtle); font-size: 13px; }
+.pt-code-locked .pt-code-icon { background: var(--lime); color: var(--lime-ink); }
+.pt-encontro h1 { font-size: clamp(34px, 9vw, 44px); letter-spacing: -.05em; }
+.pt-encontro > p { margin-top: 6px; color: var(--subtle); font-size: 16px; }
+.pt-radar { display: block; width: 100%; max-width: 460px; margin: 0 auto; }
+.pt-radar .pt-radar-pulse { transform-origin: center; transform-box: fill-box; animation: pt-radar-pulse 2.6s ease-out infinite; }
+@keyframes pt-radar-pulse { from { transform: scale(1); opacity: .8; } to { transform: scale(4.3); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .pt-radar .pt-radar-pulse { animation: none; opacity: 0; } }
+
+/* Entregador: digitar o código */
+.pt-code-entry { display: grid; gap: 12px; padding: 16px; border-radius: 26px; background: var(--lime-soft); color: var(--lime-ink); }
+.pt-code-entry .pt-notice { color: var(--lime-ink); }
+.pt-code-entry-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.pt-code-entry-head b { font-family: var(--p-display); font-size: 17px; letter-spacing: -.03em; }
+.pt-code-boxes { position: relative; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.pt-code-boxes span { height: 72px; border-radius: 20px; background: #fff; border: 2.5px solid rgba(11, 18, 8, .22); display: grid; place-items: center; font-family: var(--p-display); font-size: 38px; font-weight: 700; color: var(--lime-ink); }
+.pt-code-boxes span[data-filled] { background: var(--lime); border-color: var(--lime-ink); }
+.pt-code-boxes span[data-cursor] { border-color: var(--lime-ink); }
+.pt-code-boxes input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; font-size: 16px; caret-color: transparent; }
+.pt-code-boxes:focus-within span[data-cursor] { box-shadow: 0 0 0 3px rgba(11, 18, 8, .18); }
+.pt-distance { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 999px; background: var(--lime-ink); color: var(--lime); font-size: 12px; font-weight: 700; }
+.pt-courier-encontro { display: grid; gap: 10px; }
+.pt-steps-head { display: flex; align-items: baseline; gap: 4px; font-size: 14px; }
+.pt-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.pt-steps i { height: 6px; border-radius: 99px; background: rgba(255, 255, 255, .1); }
+.pt-steps i[data-done] { background: var(--ink); }
+.pt-steps i[data-now] { background: var(--lime); }
+.pt-encontro-distance { font-family: var(--p-display); font-size: clamp(34px, 10vw, 46px); font-weight: 700; letter-spacing: -.05em; line-height: 1.05; }
+.pt-radar-box { border-radius: 26px; background: rgba(255, 255, 255, .03); border: 1px solid var(--line); padding: 4px 0; }
+.pt-btn-lg { min-height: 60px; font-size: 18px; font-family: var(--p-display); font-weight: 700; }
