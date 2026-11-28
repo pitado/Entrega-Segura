@@ -1,7 +1,7 @@
 import { db } from "../../../../lib/db";
 import { ok } from "../../../../lib/http";
 import { withAccount } from "../../../../lib/panel";
-import { mercadoPagoConfigured, monthlyAmount, trialDays } from "../../../../lib/billing";
+import { mercadoPagoConfigured, mercadoPagoMode, monthlyAmount, trialDays } from "../../../../lib/billing";
 import { pricing } from "../../../pricing";
 
 export const runtime = "nodejs";
@@ -29,6 +29,7 @@ export async function GET(req: Request) {
       },
       trialDays: trialDays(),
       paymentsConfigured: mercadoPagoConfigured(),
+      paymentsMode: mercadoPagoMode(),
     });
   }, { allowUnpaid: true });
 }

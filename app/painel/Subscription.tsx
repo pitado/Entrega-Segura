@@ -12,6 +12,7 @@ type Billing = {
   plan: { extraCouriers: number; menuEnabled: boolean; monthly: number; basePrice: number; includedCouriers: number; extraCourierPrice: number; menuPrice: number };
   trialDays: number;
   paymentsConfigured: boolean;
+  paymentsMode: "test" | "live" | null;
 };
 
 const day = (v: string | null | undefined) => v ? new Date(v).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "America/Sao_Paulo" }) : "";
@@ -110,8 +111,8 @@ export default function Subscription({ blocked = false, onChange }: { blocked?: 
       <div className="pt-table-wrap"><table className="pt-table"><tbody>
         <tr><td>Plano Pitou (até {plan.includedCouriers} entregadores)</td><td className="pt-num">{brl(plan.basePrice)}</td></tr>
         <tr><td>
-          <span className="pt-row" style={{ gap: 8 }}>
-            Entregadores adicionais
+          <span style={{ display: "block", marginBottom: 6 }}>Entregadores adicionais</span>
+          <span className="pt-row" style={{ gap: 8, flexWrap: "nowrap" }}>
             <button type="button" className="pt-btn pt-btn-light pt-btn-sm" aria-label="Menos um entregador adicional" disabled={busy || extra === 0} onClick={() => setExtra(extra - 1)}>−</button>
             <b>{extra}</b>
             <button type="button" className="pt-btn pt-btn-light pt-btn-sm" aria-label="Mais um entregador adicional" disabled={busy || extra >= 500} onClick={() => setExtra(extra + 1)}>+</button>
@@ -125,6 +126,7 @@ export default function Subscription({ blocked = false, onChange }: { blocked?: 
         <input name="payer_email" type="email" required maxLength={160} defaultValue={sub.payerEmail || data.user.email} autoComplete="email" />
         <small className="pt-muted" style={{ fontWeight: 450 }}>Use o mesmo e-mail com que você entra no Mercado Pago.</small>
       </label>
+      {data.paymentsMode === "test" && <p className="pt-small pt-muted">Pagamento em modo de teste: só comprador de teste do Mercado Pago, com cartão de teste. Nenhuma cobrança real é feita.</p>}
       {!data.paymentsConfigured && <p className="pt-error">O pagamento ainda não foi configurado no servidor. Fale com a equipe Pitou.</p>}
       <button className="pt-btn" disabled={busy || !data.paymentsConfigured}>{busy ? "Abrindo o Mercado Pago…" : `Assinar por ${brl(total)}/mês`}</button>
       <p className="pt-small pt-muted">Cobrança mensal recorrente no cartão pelo Mercado Pago. Sem fidelidade: cancele quando quiser e use até o fim do mês pago.</p>

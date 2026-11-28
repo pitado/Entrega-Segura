@@ -227,6 +227,8 @@
 .pt-qty .pt-icon-btn { width: 32px; height: 32px; background: transparent; }
 
 @media (max-width: 900px) {
+  /* No celular o cabeçalho rola junto com a página: fixo, ele cobria o conteúdo. */
+  .pt-top { position: static; }
   .pt-orders { grid-template-columns: 1fr; }
   .pt-detail { position: static; }
   .pt-top-name { display: none; }
