@@ -52,7 +52,7 @@ export default function AuthForm({ initialMode }: { initialMode: Mode }) {
           <span className="pt-hero-kicker">Plano único</span>
           <h1>R$ {pricing.base}<small style={{ fontSize: 15, letterSpacing: 0 }}>/mês</small></h1>
           <small>até {pricing.includedCouriers} entregadores, sem fidelidade</small>
-          <Art name="moto" label={false} />
+          <Art name="joinha" label={false} />
         </div>}
         <form className="pt-stack" onSubmit={submit} key={mode}>
           {mode === "signup" && <>
@@ -80,8 +80,8 @@ export default function AuthForm({ initialMode }: { initialMode: Mode }) {
         </ul>
       </div>
       <div className="pt-auth-float"><i><ShieldCheck size={20} aria-hidden="true" /></i><b>Entrega acompanhada</b><small>Ao vivo, do preparo à porta</small></div>
-      <Art name="moto" />
-      <Art name="box" />
+      <Art name="joinha" />
+      <Art name="pacotes" />
     </aside>
   </main>;
 }

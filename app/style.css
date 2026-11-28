@@ -50,3 +50,8 @@ body {
 .pt-art { display: inline-block; line-height: 0; }
 .pt-art svg { display: block; width: 100%; height: auto; }
 .pt-art-moto svg { filter: drop-shadow(0 12px 16px rgba(11, 18, 8, .22)); }
+
+/* Arco claro atrás das ilustrações de corpo inteiro: destaca as caixas verdes sobre fundo verde */
+.pt-art-joinha, .pt-art-caixas, .pt-art-pacotes { isolation: isolate; }
+.pt-art-joinha::before, .pt-art-caixas::before, .pt-art-pacotes::before { content: ""; position: absolute; z-index: -1; left: 6%; right: 6%; bottom: 0; height: 64%; border-radius: 999px 999px 0 0; background: #EEF8DA; }
+.pt-art-pacotes::before { left: 0; right: 0; height: 80%; }

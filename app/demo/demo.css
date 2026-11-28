@@ -563,3 +563,5 @@
 .trip-hero .trip-art.pt-art-box { top: auto; bottom: 0; right: 2%; width: min(46%, 400px); height: auto; }
 .trip-hero .trip-art.pt-art-box svg { height: auto; }
 @media (max-width: 580px) { .trip-hero .trip-art.pt-art-box { width: 46%; right: 0; } }
+.trip-hero .trip-art.pt-art-pacotes { width: min(34%, 300px); right: 3%; }
+@media (max-width: 580px) { .trip-hero .trip-art.pt-art-pacotes { width: 40%; right: 2%; } }

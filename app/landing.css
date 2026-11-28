@@ -357,3 +357,12 @@
 }
 
 .lp-faq-handoff { right: -10px; bottom: 0; width: 58%; }
+
+/* Ilustrações de corpo inteiro (mais altas que a moto) */
+.lp-hero-person { left: 3%; bottom: 0; width: 40%; }
+.lp-tile-person { left: 6px; bottom: 0; width: 28%; }
+.lp-final-person { right: 7%; bottom: 0; width: min(330px, 30%); }
+@media (max-width: 720px) {
+  .lp-tile-person { width: 40%; }
+  .lp-final-person { right: 4%; width: min(230px, 60%); }
+}

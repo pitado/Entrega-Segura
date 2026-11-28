@@ -139,7 +139,7 @@ export default function Home() {
         </div>
         <div className="lp-hero-art">
           <svg className="lp-rings" viewBox="0 0 600 600" aria-hidden="true"><g fill="none" stroke="#0B1208" strokeOpacity=".09" strokeWidth="2"><circle cx="300" cy="380" r="120" /><circle cx="300" cy="380" r="220" /><circle cx="300" cy="380" r="320" /></g></svg>
-          <Art name="moto" className="lp-hero-moto" />
+          <Art name="joinha" className="lp-hero-moto lp-hero-person" />
           <CustomerPhone />
           <div className="lp-float lp-float-a"><span className="lp-float-icon"><ShieldCheck size={18} /></span><span><b>Entrega verificada</b><small>Código confirmado pelo cliente</small></span></div>
           <div className="lp-float lp-float-b"><Gift size={16} aria-hidden="true" /> + R$ 3,45 de cashback</div>
@@ -196,7 +196,7 @@ export default function Home() {
               {[["A", "Ana Costa", "#1042 · Lucas", "Em rota", "lime"], ["M", "Marcos Lima", "#1041 · Mariana", "Preparando", "yellow"], ["J", "Júlia Reis", "#1040 · Rafael", "No destino", "soft"]].map(([i, name, meta, status, tone]) =>
                 <li key={name}><span className="lp-avatar">{i}</span><span><b>{name}</b><small>{meta}</small></span><em data-tone={tone}>{status}</em></li>)}
             </ul>
-            <Art name="moto" className="lp-tile-moto" />
+            <Art name="caixas" className="lp-tile-moto lp-tile-person" />
           </article>
 
           <article className="lp-tile lp-dark lp-tile-team">
@@ -341,7 +341,7 @@ export default function Home() {
             <p>Crie sua conta, cadastre seus entregadores e envie o primeiro pedido hoje.</p>
             <a className="lp-btn lp-btn-ink" href="/entrar?criar">Criar minha conta <ArrowRight size={20} aria-hidden="true" /></a>
           </div>
-          <Art name="box" className="lp-final-box" />
+          <Art name="pacotes" className="lp-final-box lp-final-person" />
         </div>
       </section>
     </main>
