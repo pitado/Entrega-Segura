@@ -41,7 +41,7 @@ Build: `npx opennextjs-cloudflare build`; deploy: `npx wrangler deploy`.
 
 ### Domínio pitou.com.br
 
-O `wrangler.jsonc` publica o Worker como **Custom Domain** em `pitou.com.br` e `www.pitou.com.br`; o `www` redireciona (301) para o endereço sem `www`.
+O `wrangler.jsonc` publica o Worker como **Custom Domain** em `pitou.com.br` e `www.pitou.com.br` e mantém o endereço `pitou.miguellpitaa.workers.dev`; o `www` redireciona (301) para o endereço sem `www`.
 
 1. Adicione `pitou.com.br` como site na conta Cloudflare (plano Free basta).
 2. No Registro.br, troque os servidores DNS do domínio pelos dois nameservers indicados pela Cloudflare e aguarde a zona ficar **Active**.
@@ -62,7 +62,7 @@ npm run build
 npm run test:smoke
 ```
 
-Por padrão os testes usam `https://pitou.com.br`. Use `TEST_BASE_URL` para direcionar os testes para outra instalação do MVP (no GitHub Actions, defina a variável de repositório `TEST_BASE_URL`). Requer `DATABASE_URL` funcional no Worker e estabelecimento piloto preparado para o laboratório.
+Por padrão os testes usam `https://pitou.com.br` e, se o domínio ainda não responder, `https://pitou.miguellpitaa.workers.dev`. Use `TEST_BASE_URL` para direcionar os testes para outra instalação do MVP (no GitHub Actions, defina a variável de repositório `TEST_BASE_URL`). Requer `DATABASE_URL` funcional no Worker e estabelecimento piloto preparado para o laboratório.
 
 ## Antes da produção
 

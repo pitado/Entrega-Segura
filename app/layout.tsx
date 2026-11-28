@@ -6,7 +6,7 @@ const siteUrl = "https://pitou.com.br";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: { default: "Pitou — entregas", template: "%s · Pitou" },
+  title: { default: "Demonstração de entregas · Pitou", template: "%s · Pitou" },
   description: "Simulação de entregas para estabelecimento, entregador e cliente.",
   applicationName: "Pitou",
   openGraph: {
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     siteName: "Pitou",
     locale: "pt_BR",
     url: siteUrl,
-    title: "Pitou — entregas",
+    title: "Demonstração de entregas · Pitou",
     description: "Simulação de entregas para estabelecimento, entregador e cliente.",
   },
   // MVP: manter fora dos buscadores até a versão de produção.
