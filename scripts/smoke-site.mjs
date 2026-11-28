@@ -35,12 +35,16 @@ async function readyForSmoke(){
 }
 await readyForSmoke();
 let sessionKey="",courierToken="",consumerToken="",orderId="";
-await check("Página inicial e demonstração",async()=>{
- for(const path of ["/","/demo"]){
-  const res=await request(path);
-  assert.equal(res.status,200,path+" "+res.status);
-  assert.match(String(res.body),/Demonstração de entregas/i,path);
- }
+await check("Página inicial com planos",async()=>{
+ const res=await request("/",{headers:{Accept:"text/html"}});
+ assert.equal(res.status,200,"/ "+res.status);
+ assert.match(String(res.body),/Pitou/,"marca na página inicial");
+ assert.match(String(res.body),/R\$\s*299/,"preço do plano na página inicial");
+});
+await check("Página de demonstração",async()=>{
+ const res=await request("/demo");
+ assert.equal(res.status,200,"/demo "+res.status);
+ assert.match(String(res.body),/Demonstração de entregas/i,"/demo");
 });
 await check("Neon e endpoint de saúde",async()=>{
  const res=await request("/api/health");

@@ -1,4 +1,4 @@
-# Entrega Segura — arquitetura incremental
+# Pitou — arquitetura incremental
 
 ## Implementado
 - Next.js 15 / React 19: demonstração das três interfaces, com estado local no navegador.

@@ -6,7 +6,7 @@ Aplicação responsiva para **estabelecimento, motoboy e consumidor**, com Next.
 
 ## Protótipo
 
-A página inicial abre a demonstração em `/demo`. Os três perfis trabalham com o mesmo pedido fictício, salvo no navegador.
+A página inicial (`/`) apresenta o Pitou e o plano comercial (valores em `app/pricing.ts`), com links para a demonstração em `/demo`. Na demonstração, os três perfis trabalham com o mesmo pedido fictício, salvo no navegador.
 
 - **Estabelecimento** cria, pesquisa e filtra pedidos.
 - **Entregador** inicia o trajeto e avança as etapas da entrega.
