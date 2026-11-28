@@ -6,12 +6,12 @@ import PitouLogo from "./components/PitouLogo";
 import PriceSimulator from "./PriceSimulator";
 import { pricing } from "./pricing";
 import "./landing.css";
-
-const description = "Gestão e acompanhamento das entregas do seu estabelecimento em tempo real, com entregadores próprios, histórico e cashback para fidelizar clientes.";
+import { jsonLd, siteDescription, siteName, siteTitle, siteUrl } from "../lib/seo";
 
 export const metadata: Metadata = {
-  title: { absolute: "Pitou · Entregas sob controle para o seu estabelecimento" },
-  description,
+  title: { absolute: siteTitle },
+  description: siteDescription,
+  alternates: { canonical: "/" },
 };
 
 const money = (value: number) => value.toLocaleString("pt-BR", { minimumFractionDigits: value % 1 ? 2 : 0, maximumFractionDigits: 2 });
@@ -35,6 +35,30 @@ const faq = [
   { q: `E se eu tiver mais de ${pricing.includedCouriers} entregadores?`, a: `Cada entregador além dos ${pricing.includedCouriers} incluídos custa R$ ${money(pricing.extraCourier)} por mês.` },
   { q: "O Menu Digital é obrigatório?", a: `Não. É um adicional opcional de R$ ${money(pricing.menu)} por mês, para ter um cardápio online com a identidade do seu estabelecimento.` },
 ];
+
+/** Dados estruturados (schema.org) para o Google entender a empresa, o produto, o preço e as perguntas frequentes. */
+const structuredData = {
+  "@context": "https://schema.org",
+  "@graph": [
+    { "@type": "Organization", "@id": `${siteUrl}/#organizacao`, name: siteName, url: siteUrl, logo: `${siteUrl}/icon.svg` },
+    { "@type": "WebSite", "@id": `${siteUrl}/#site`, name: siteName, url: siteUrl, inLanguage: "pt-BR", publisher: { "@id": `${siteUrl}/#organizacao` } },
+    {
+      "@type": "SoftwareApplication",
+      name: siteName,
+      url: siteUrl,
+      applicationCategory: "BusinessApplication",
+      operatingSystem: "Web",
+      description: siteDescription,
+      inLanguage: "pt-BR",
+      publisher: { "@id": `${siteUrl}/#organizacao` },
+      offers: { "@type": "Offer", price: pricing.base.toFixed(2), priceCurrency: "BRL", url: `${siteUrl}/#precos`, category: "Assinatura mensal" },
+    },
+    {
+      "@type": "FAQPage",
+      mainEntity: faq.map(item => ({ "@type": "Question", name: item.q, acceptedAnswer: { "@type": "Answer", text: item.a } })),
+    },
+  ],
+};
 
 const steps = ["Preparo", "Em rota", "Destino", "Entregue"];
 
@@ -81,6 +105,7 @@ function MerchantForm() {
 
 export default function Home() {
   return <div className="lp">
+    <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(structuredData)} />
     <div className="lp-header-wrap">
       <header className="lp-header lp-wrap">
         <a className="lp-logo" href="#inicio" aria-label="Pitou, início"><PitouLogo size={36} /></a>
