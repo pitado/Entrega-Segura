@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import {
-  ArrowRight, BellRing, Bike, Check, ClipboardList, Gift, History, MapPin, MenuSquare, Route, ShieldCheck, Store,
+  ArrowRight, BellRing, Bike, Check, ClipboardList, Gift, History, Link2, MapPin, MenuSquare, Route, ShieldCheck, Store,
 } from "lucide-react";
+import PitouLogo from "./components/PitouLogo";
 import PriceSimulator from "./PriceSimulator";
 import { pricing } from "./pricing";
 import "./landing.css";
@@ -19,7 +20,9 @@ const features = [
   { icon: Bike, title: "Seus entregadores", text: `Cadastre a sua equipe de entrega. O plano já inclui até ${pricing.includedCouriers} entregadores.`, tone: "blue" },
   { icon: Route, title: "Tempo real", text: "Veja onde cada entrega está agora, do preparo até a porta do cliente.", tone: "orange" },
   { icon: History, title: "Histórico completo", text: "Consulte entregas passadas, quem levou e quando cada pedido foi concluído.", tone: "lilac" },
-  { icon: Gift, title: "Cashback", text: "Devolva parte do valor como crédito e incentive o cliente a comprar de novo.", tone: "green" },
+  { icon: Gift, title: "Cashback para clientes", text: "Devolva parte do valor como crédito e incentive o cliente a comprar de novo.", tone: "green" },
+  { icon: Link2, title: "Link para o cliente", text: "O cliente acompanha a entrega pelo celular, sem instalar aplicativo, e avisa quando está pronto.", tone: "blue" },
+  { icon: MenuSquare, title: "Menu Digital Próprio", text: "Adicional opcional: cardápio online com a sua marca, fotos, preços e link para divulgar.", tone: "lilac", addon: true },
 ];
 
 const steps = [
@@ -51,10 +54,7 @@ export default function Home() {
   return <div className="lp">
     <header className="lp-header">
       <div className="lp-wrap lp-header-inner">
-        <a className="lp-logo" href="#inicio" aria-label="Pitou, início">
-          <img src="/redesign/route-symbol.webp" alt="" width={40} height={38} />
-          <span>Pitou</span>
-        </a>
+        <a className="lp-logo" href="#inicio" aria-label="Pitou, início"><PitouLogo size={38} /></a>
         <nav aria-label="Seções">
           <a href="#recursos">Recursos</a>
           <a href="#como-funciona">Como funciona</a>
@@ -67,7 +67,7 @@ export default function Home() {
     <main id="inicio">
       <section className="lp-wrap lp-hero">
         <div className="lp-hero-copy">
-          <span className="lp-eyebrow"><ShieldCheck size={18} aria-hidden="true" /> Entrega segura do balcão à porta</span>
+          <span className="lp-eyebrow"><ShieldCheck size={18} aria-hidden="true" /> Entregas sob controle, do balcão à porta</span>
           <h1>Suas entregas sob controle, do pedido à porta do cliente.</h1>
           <p>O Pitou reúne a gestão dos seus entregadores, o acompanhamento em tempo real e um cashback que traz o cliente de volta. Tudo em um único plano mensal, sem fidelidade.</p>
           <div className="lp-actions">
@@ -89,8 +89,9 @@ export default function Home() {
           <p>Uma solução completa para gestão, acompanhamento e segurança das entregas, além de ferramentas para fidelizar clientes.</p>
         </div>
         <div className="lp-features">
-          {features.map(({ icon: Icon, title, text, tone }) => <article key={title} className={`lp-card lp-tone-${tone}`}>
+          {features.map(({ icon: Icon, title, text, tone, addon }) => <article key={title} className={`lp-card lp-tone-${tone}`}>
             <span className="lp-icon"><Icon size={24} aria-hidden="true" /></span>
+            {addon && <span className="lp-card-tag">Opcional</span>}
             <h3>{title}</h3>
             <p>{text}</p>
           </article>)}
@@ -175,7 +176,7 @@ export default function Home() {
     </main>
 
     <footer className="lp-wrap lp-footer">
-      <span className="lp-logo lp-logo-small"><img src="/redesign/route-symbol.webp" alt="" width={28} height={27} /> Pitou</span>
+      <PitouLogo size={28} />
       <span>© {new Date().getFullYear()} Pitou · pitou.com.br</span>
     </footer>
   </div>;

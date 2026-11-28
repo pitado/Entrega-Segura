@@ -16,6 +16,6 @@ export function wazeDirectionsUrl(
   else url.searchParams.set("q",destinationText);
   url.searchParams.set("navigate","yes");
   url.searchParams.set("vehicle_type","motorcycle");
-  url.searchParams.set("utm_source","entrega-segura");
+  url.searchParams.set("utm_source","pitou");
   return url.toString();
 }

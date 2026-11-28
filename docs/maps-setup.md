@@ -1,11 +1,11 @@
 # Integração de Mapas — Mapbox + MapLibre
 
-O Entrega Segura utiliza o **OpenFreeMap** como mapa de base, renderizado por MapLibre GL JS. Os pontos de motoboy e destino são SVGs simples e legíveis no mobile. O **Mapbox Directions** gera o percurso pelas ruas e uma estimativa para veículos; não é necessário habilitar Google Cloud.
+O Pitou utiliza o **OpenFreeMap** como mapa de base, renderizado por MapLibre GL JS. Os pontos de motoboy e destino são SVGs simples e legíveis no mobile. O **Mapbox Directions** gera o percurso pelas ruas e uma estimativa para veículos; não é necessário habilitar Google Cloud.
 
 ## Ativar a rota e o ETA
 
 1. Acesse https://account.mapbox.com/ e crie sua conta.
-2. Em https://account.mapbox.com/access-tokens/ crie um token dedicado ao Entrega Segura, com as menores permissões necessárias para consultar Directions. Verifique as regras de cobrança e configure alertas/limites de uso antes de ativar serviços faturados. **Não autorize cobranças sem revisar os preços.**
+2. Em https://account.mapbox.com/access-tokens/ crie um token dedicado ao Pitou, com as menores permissões necessárias para consultar Directions. Verifique as regras de cobrança e configure alertas/limites de uso antes de ativar serviços faturados. **Não autorize cobranças sem revisar os preços.**
 3. Abra https://dash.cloudflare.com/ → Workers & Pages → `entrega-segura2` → Settings → Variables and Secrets.
 4. Crie o secret **`MAPBOX_ACCESS_TOKEN`** e cole seu token no valor. Não precisa copiar o token para GitHub nem enviá-lo nesta conversa.
 5. Salve e publique uma nova versão do Worker.
@@ -36,7 +36,7 @@ Informações de API: https://docs.mapbox.com/api/navigation/directions/ e https
 O **botão Navegar com Waze** está disponível no mapa de cada entrega e na área do motoboy, inclusive no laboratório. Utiliza [Waze Deep Links](https://developers.google.com/waze/deeplinks) por URL HTTPS, sem API key e sem ativação de faturamento.
 
 - Se houver latitude e longitude confirmadas, o link usa `ll=latitude,longitude`; caso contrário, busca o endereço com `q=`.
-- Envia `navigate=yes` e `vehicle_type=motorcycle`, além de `utm_source=entrega-segura`.
+- Envia `navigate=yes` e `vehicle_type=motorcycle`, além de `utm_source=pitou`.
 - No celular com Waze instalado, abre o aplicativo; nos demais casos abre a experiência Web do Waze.
-- **O Waze não substitui o rastreamento do Entrega Segura e não envia ETA ao aplicativo.** O mapa embutido continua no MapLibre; as previsões internas são calculadas somente com Mapbox quando configurado.
+- **O Waze não substitui o rastreamento do Pitou e não envia ETA ao aplicativo.** O mapa embutido continua no MapLibre; as previsões internas são calculadas somente com Mapbox quando configurado.
 - Confira o destino antes de iniciar a navegação, especialmente quando o link usa endereço em texto e pode haver locais semelhantes.

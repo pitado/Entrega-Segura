@@ -1,4 +1,4 @@
-name: Qualidade do Entrega Segura
+name: Qualidade do Pitou
 on:
   push:
     branches: [main, teste-deploy]
