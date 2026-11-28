@@ -327,7 +327,7 @@ export default function Home() {
             <h3>Prefere ver na prática?</h3>
             <p>Abra a demonstração e acompanhe um pedido do começo ao fim.</p>
             <a className="lp-btn lp-btn-ink lp-btn-sm" href="/demo">Abrir demonstração <ArrowRight size={18} aria-hidden="true" /></a>
-            <Art name="moto" className="lp-faq-moto" label={false} />
+            <Art name="box" className="lp-faq-moto lp-faq-handoff" label={false} />
           </div>
         </div>
         <div className="lp-faq">
@@ -342,7 +342,6 @@ export default function Home() {
             <p>Crie sua conta, cadastre seus entregadores e envie o primeiro pedido hoje.</p>
             <a className="lp-btn lp-btn-ink" href="/entrar?criar">Criar minha conta <ArrowRight size={20} aria-hidden="true" /></a>
           </div>
-          <Art name="moto" className="lp-final-moto" />
           <Art name="box" className="lp-final-box" />
         </div>
       </section>

@@ -49,3 +49,4 @@ body {
 /* Ilustrações da marca */
 .pt-art { display: inline-block; line-height: 0; }
 .pt-art svg { display: block; width: 100%; height: auto; }
+.pt-art-moto svg { filter: drop-shadow(0 12px 16px rgba(11, 18, 8, .22)); }
