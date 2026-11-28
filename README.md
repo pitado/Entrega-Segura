@@ -39,6 +39,16 @@ Não publique nenhuma credencial. Habilitar faturamento no Mapbox depende de aut
 
 Build: `npx opennextjs-cloudflare build`; deploy: `npx wrangler deploy`.
 
+### Domínio pitou.com.br
+
+O `wrangler.jsonc` publica o Worker como **Custom Domain** em `pitou.com.br` e `www.pitou.com.br`; o `www` redireciona (301) para o endereço sem `www`.
+
+1. Adicione `pitou.com.br` como site na conta Cloudflare (plano Free basta).
+2. No Registro.br, troque os servidores DNS do domínio pelos dois nameservers indicados pela Cloudflare e aguarde a zona ficar **Active**.
+3. Publique o Worker. A Cloudflare cria os registros DNS e o certificado TLS dos dois endereços automaticamente.
+
+Enquanto a zona não estiver ativa na conta, o deploy com estas rotas falha. Nesse caso, conclua os passos 1 e 2 antes de publicar.
+
 ## Auditoria e testes
 
 A branch executa workflow no GitHub Actions: TypeScript, compilação Next.js e **smoke test do Worker ativo**. O teste funcional cria uma sessão **fictícia** no Neon, gera dois links, atribui motoboy, avança status, envia posição simulada, recebe confirmação do consumidor, conclui entrega e testa bloqueios de segurança. Ele não altera nem remove pedidos operacionais.
@@ -52,7 +62,7 @@ npm run build
 npm run test:smoke
 ```
 
-Use `TEST_BASE_URL` para direcionar os testes para outra instalação do MVP. Requer `DATABASE_URL` funcional no Worker e estabelecimento piloto preparado para o laboratório.
+Por padrão os testes usam `https://pitou.com.br`. Use `TEST_BASE_URL` para direcionar os testes para outra instalação do MVP (no GitHub Actions, defina a variável de repositório `TEST_BASE_URL`). Requer `DATABASE_URL` funcional no Worker e estabelecimento piloto preparado para o laboratório.
 
 ## Antes da produção
 

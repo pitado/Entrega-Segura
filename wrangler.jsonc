@@ -11,6 +11,10 @@
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   },
+  "routes": [
+    { "pattern": "pitou.com.br", "custom_domain": true },
+    { "pattern": "www.pitou.com.br", "custom_domain": true }
+  ],
   "observability": {
     "enabled": true
   }

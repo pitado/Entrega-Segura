@@ -35,5 +35,5 @@ jobs:
           node-version: '22'
       - name: Testar páginas, APIs e pedido de demonstração
         env:
-          TEST_BASE_URL: https://entrega-segura2.miguellpitaa.workers.dev
+          TEST_BASE_URL: ${{ vars.TEST_BASE_URL || 'https://pitou.com.br' }}
         run: npm run test:smoke

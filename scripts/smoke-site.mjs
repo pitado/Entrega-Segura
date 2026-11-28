@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 
-const base=String(process.env.TEST_BASE_URL||"https://entrega-segura2.miguellpitaa.workers.dev").replace(/\/$/,"");
+const base=String(process.env.TEST_BASE_URL||"https://pitou.com.br").replace(/\/$/,"");
 const timeoutMs=15000;
 let passed=0, failed=0;
 const issues=[];
