@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { cache } from "react";
 import { db } from "../../../lib/db";
 import { validSlug } from "../../../lib/slug";
+import { accessFor, billingColumns } from "../../../lib/billing";
 import MenuView, { type MenuProduct } from "./MenuView";
 import "../../app.css";
 
@@ -14,9 +15,16 @@ const load = cache(async (slug: string) => {
   if (!validSlug(slug)) return null;
   const sql = db();
   const rows = await sql.query(
-    "SELECT id,name,logo_url,brand_color,menu_description,phone,address FROM establishments WHERE slug=$1 AND menu_enabled=true LIMIT 1", [slug]);
-  const establishment = rows[0] as Establishment | undefined;
-  if (!establishment) return null;
+    `SELECT e.id,e.name,e.logo_url,e.brand_color,e.menu_description,e.phone,e.address,${billingColumns},
+       (SELECT u.email FROM establishment_users u WHERE u.establishment_id=e.id AND u.role='owner' ORDER BY u.created_at LIMIT 1) AS owner_email
+     FROM establishments e WHERE e.slug=$1 AND e.menu_enabled=true LIMIT 1`, [slug]);
+  const row = rows[0];
+  // Cardápio só fica no ar enquanto a assinatura (ou teste/cortesia) estiver ativa.
+  if (!row || !accessFor(row as never, String(row.owner_email || "")).active) return null;
+  const establishment: Establishment = {
+    id: row.id, name: row.name, logo_url: row.logo_url, brand_color: row.brand_color,
+    menu_description: row.menu_description, phone: row.phone, address: row.address,
+  };
   const products = await sql.query(
     `SELECT id,name,description,category,price::float8 AS price,photo_url FROM menu_products
      WHERE establishment_id=$1 AND available=true ORDER BY category NULLS LAST,position,name`, [establishment.id]) as MenuProduct[];
