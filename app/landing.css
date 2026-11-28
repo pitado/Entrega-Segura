@@ -54,6 +54,8 @@
 .lp-btn-light:hover { background: #f4f5fb; }
 .lp-btn-block { width: 100%; }
 .lp-header-cta { min-height: 44px; padding: 8px 18px; }
+.lp-header-login { font-weight: 650; text-decoration: none; padding: 8px 6px; }
+.lp-header-login:hover { text-decoration: underline; }
 
 /* Hero */
 .lp-hero { display: grid; grid-template-columns: 1.05fr .95fr; gap: clamp(28px, 5vw, 72px); align-items: center; padding-block: clamp(40px, 7vw, 96px); }
@@ -162,7 +164,7 @@
 }
 @media (max-width: 820px) {
   .lp-header nav { display: none; }
-  .lp-header-cta { margin-left: auto; }
+  .lp-header-login { margin-left: auto; }
   .lp-hero { grid-template-columns: 1fr; }
   .lp-hero-art { max-width: 520px; }
   .lp-float-top { left: 12px; }

@@ -7,6 +7,7 @@ import type { GeoJSONSource, Map as LibreMap, Marker as LibreMarker } from "mapl
 import { wazeDirectionsUrl } from "../../lib/navigation";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./delivery-map.css";
+import { loadMaplibre } from "../components/maplibre";
 
 type Coordinate = [number, number];
 type DeliveryStatus = "preparing" | "on_route" | "arrived" | "delivered";
@@ -136,7 +137,7 @@ function MapCanvas({ step, routePoints, expanded, header, footer }: {
 
     async function prepare() {
       try {
-        const maplibregl = await import("maplibre-gl");
+        const maplibregl = await loadMaplibre();
         if (disposed || !container.current) return;
         const instance = new maplibregl.Map({
           container: container.current,
