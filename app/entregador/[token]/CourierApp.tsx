@@ -120,7 +120,7 @@ export default function CourierApp({ token }: { token: string }) {
       <span className="pt-hero-kicker">Entregas de {data.courier.establishment_name}</span>
       <h1>Olá, {data.courier.name.split(" ")[0]}</h1>
       <p>{data.today.delivered} entregue{data.today.delivered === 1 ? "" : "s"} hoje</p>
-      <Art name="pacotes" label={false} />
+      <Art name="joinha" label={false} />
     </div>
 
     <div className="pt-card pt-stack">

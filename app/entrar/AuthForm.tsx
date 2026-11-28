@@ -80,8 +80,8 @@ export default function AuthForm({ initialMode }: { initialMode: Mode }) {
         </ul>
       </div>
       <div className="pt-auth-float"><i><ShieldCheck size={20} aria-hidden="true" /></i><b>Entrega acompanhada</b><small>Ao vivo, do preparo à porta</small></div>
-      <Art name="joinha" />
-      <Art name="pacotes" />
+      <Art name="caixas" />
+      <Art name="box" />
     </aside>
   </main>;
 }

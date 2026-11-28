@@ -70,7 +70,7 @@ function CustomerPhone({ compact = false }: { compact?: boolean }) {
       <span>Chega em</span>
       <b>8 min</b>
       <small>Lucas a caminho</small>
-      <Art name="moto" className="lp-eta-art" label={false} />
+      <Art name="box" className="lp-eta-art lp-eta-hand" label={false} />
     </div>
     <div className="lp-phone-row">
       <div className="lp-mini lp-mini-dark"><span className="lp-avatar">L</span><span><b>Lucas</b><small>Moto</small></span><span className="lp-round"><Phone size={13} /></span></div>
@@ -322,11 +322,11 @@ export default function Home() {
       <section id="perguntas" className="lp-wrap lp-section lp-faq-section">
         <div className="lp-faq-side">
           <h2>Perguntas frequentes</h2>
-          <div className="lp-faq-demo">
+          <div className="lp-faq-demo lp-faq-demo-pack">
             <h3>Prefere ver na prática?</h3>
             <p>Abra a demonstração e acompanhe um pedido do começo ao fim.</p>
             <a className="lp-btn lp-btn-ink lp-btn-sm" href="/demo">Abrir demonstração <ArrowRight size={18} aria-hidden="true" /></a>
-            <Art name="box" className="lp-faq-moto lp-faq-handoff" label={false} />
+            <Art name="pacotes" className="lp-faq-moto lp-faq-pack" label={false} />
           </div>
         </div>
         <div className="lp-faq">
@@ -341,7 +341,7 @@ export default function Home() {
             <p>Crie sua conta, cadastre seus entregadores e envie o primeiro pedido hoje.</p>
             <a className="lp-btn lp-btn-ink" href="/entrar?criar">Criar minha conta <ArrowRight size={20} aria-hidden="true" /></a>
           </div>
-          <Art name="pacotes" className="lp-final-box lp-final-person" />
+          <Art name="box" className="lp-final-box" />
         </div>
       </section>
     </main>

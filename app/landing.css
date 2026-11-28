@@ -366,3 +366,8 @@
   .lp-tile-person { width: 40%; }
   .lp-final-person { right: 4%; width: min(230px, 60%); }
 }
+.lp-eta-hand { right: 0; bottom: 0; width: 50%; }
+.lp-faq-demo-pack { padding-bottom: 26px; min-height: 250px; align-content: start; }
+.lp-faq-demo-pack > :not(.pt-art) { max-width: 56%; position: relative; z-index: 1; }
+.lp-faq-pack { right: 0; bottom: 0; width: 42%; }
+@media (max-width: 720px) { .lp-faq-demo-pack { padding-bottom: 200px; } .lp-faq-demo-pack > :not(.pt-art) { max-width: none; } .lp-faq-pack { width: min(220px, 58%); } }
