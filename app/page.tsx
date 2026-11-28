@@ -236,13 +236,13 @@ export default function Home() {
 
           <article className="lp-tile lp-dark lp-tile-menu">
             <div className="lp-tile-copy">
-              <span className="lp-pill-soft">Adicional opcional</span>
+              <span className="lp-pill-soft">Adicional</span>
               <h3>Menu Digital Próprio</h3>
               <p>Um cardápio online com a cara do seu estabelecimento: logotipo, produtos, fotos, preços e um link exclusivo para divulgar.</p>
             </div>
             <ul className="lp-foods" aria-label="Exemplo de cardápio">
               {([["burger", "Smash burger", "28,90", "yellow"], ["juice", "Suco natural", "9,50", "soft"], ["fries", "Batata média", "14,00", "coral"]] as const).map(([art, name, price, tone]) =>
-                <li key={name}><span className="lp-food-art" data-tone={tone}><Art name={art} label={false} /></span><span><b>{name}</b><small>R$ {price}</small></span><span className="lp-add"><Plus size={16} /></span></li>)}
+                <li key={name}><span className="lp-food-art" data-tone={tone}><img src={`https://images.pexels.com/photos/${({ burger: 15226134, juice: 6829918, fries: 13187600 } as const)[art]}/pexels-photo-${({ burger: 15226134, juice: 6829918, fries: 13187600 } as const)[art]}.jpeg?auto=compress&cs=tinysrgb&w=480`} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "inherit", minHeight: 0 }} /></span><span><b>{name}</b><small>R$ {price}</small></span><span className="lp-add"><Plus size={16} /></span></li>)}
             </ul>
           </article>
         </div>
@@ -300,7 +300,7 @@ export default function Home() {
               <div className="lp-addon-head">
                 <div>
                   <h3>Menu Digital Próprio</h3>
-                  <span className="lp-addon-label">Adicional opcional</span>
+                  <span className="lp-addon-label">Adicional</span>
                 </div>
                 <p className="lp-addon-price">+ R$ {money(pricing.menu)}<span>/mês</span></p>
               </div>
