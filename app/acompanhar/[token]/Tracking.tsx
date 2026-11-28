@@ -108,7 +108,7 @@ export default function Tracking({ token }: { token: string }) {
       <h1>{headline[order.status]}</h1>
       {order.courier_name && active && order.status !== "preparing" && <p>{order.courier_name} está levando o seu pedido.</p>}
       {order.status === "delivered" && order.delivered_at && <p>Entregue às {time(order.delivered_at)}. Bom apetite!</p>}
-      <Art name={order.status === "delivered" ? "joinha" : order.status === "preparing" ? "pacotes" : "caixas"} label={false} />
+      <Art name={order.status === "delivered" ? "joinha" : order.status === "preparing" ? "pacotes" : order.status === "arrived" ? "box" : "caixas"} label={false} />
     </div>
     {order.status !== "cancelled" && <div className="pt-card"><div className="pt-steps" aria-label="Etapas da entrega">
       {steps.map((s, i) => <div key={s} className={"pt-step" + (i <= stepIndex ? " done" : "")}><i />{statusLabel[s]}</div>)}
