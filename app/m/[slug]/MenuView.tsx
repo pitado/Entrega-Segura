@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Minus, Plus, ShoppingBag } from "lucide-react";
 import { brl, whatsappUrl } from "../../components/client";
+import PitouLogo from "../../components/PitouLogo";
 
 export type MenuProduct = { id: string; name: string; description: string | null; category: string | null; price: number; photo_url: string | null };
 
@@ -42,6 +43,6 @@ export default function MenuView({ products, whatsapp, name }: { products: MenuP
         <ShoppingBag size={18} /> Pedir pelo WhatsApp · {count} {count === 1 ? "item" : "itens"} · {brl(total)}
       </a>
     </div>}
-    <p className="pt-footer-note">Cardápio digital por <a href="/"><span className="pitou-logo"><span className="pitou-wordmark">Pitou</span></span></a></p>
+    <p className="pt-footer-note">Cardápio digital por <a href="/" aria-label="Pitou"><PitouLogo size={18} /></a></p>
   </div>;
 }

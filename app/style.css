@@ -43,7 +43,8 @@ body {
 }
 .pitou-logo { display: inline-flex; align-items: center; color: var(--p-text); text-decoration: none; }
 .pitou-wordmark { font-family: var(--p-display); font-weight: 700; letter-spacing: -.04em; line-height: 1; }
-.pitou-mark { flex: 0 0 auto; display: inline-grid; place-items: center; background: var(--p-lime); color: var(--p-lime-ink); font-family: var(--p-display); font-weight: 700; letter-spacing: -.04em; line-height: 1; }
+.pitou-lockup { display: block; overflow: visible; }
+.pitou-mark { flex: 0 0 auto; display: block; }
 
 /* Ilustrações da marca */
 .pt-art { display: inline-block; line-height: 0; }
