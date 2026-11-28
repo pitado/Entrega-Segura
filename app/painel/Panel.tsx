@@ -70,7 +70,7 @@ export default function Panel() {
   return <div className="pt">
     <header className="pt-top">
       <div className="pt-top-inner">
-        <a href="/painel" aria-label="Pitou, painel"><PitouLogo size={34} /></a>
+        <a href="/painel" aria-label="Pitou, painel"><PitouLogo size={34} symbolOnly /></a>
         <span className="pt-top-name">{data?.establishment.name}</span>
         <button className="pt-btn pt-btn-light pt-btn-sm" style={{ marginLeft: "auto" }} onClick={logout}><LogOut size={16} aria-hidden="true" /> Sair</button>
       </div>
