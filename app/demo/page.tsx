@@ -612,7 +612,7 @@ export default function DemoPage() {
               <p>Acompanhe o preparo, a coleta e a rota das suas entregas.</p>
               <Pill onClick={() => showFilter("active")}>Ver detalhes <ArrowRight size={21} /></Pill>
             </div>
-            <Art name="box" className="trip-art trip-art-box" label={false} />
+            <Art name="pacotes" className="trip-art trip-art-box" label={false} />
           </section>
           <div className="trip-summary">
             {(["preparing", "on_route"] as const).map(status => {
