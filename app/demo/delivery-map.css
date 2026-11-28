@@ -1,9 +1,9 @@
 .trip-tracking-module {
   min-width: 0;
   overflow: hidden;
-  border: 4px solid #fff;
+  border: 4px solid #12151F;
   border-radius: var(--trip-radius, 28px);
-  background: #f8f8ff;
+  background: #12151F;
   box-shadow: 0 10px 24px #3538651a;
 }
 .trip-tracking-viewport { position: relative; height: clamp(290px, 27vw, 355px); background: #e9ebfa; }
@@ -14,8 +14,8 @@
 .trip-map-static svg { position: absolute; inset: 0; width: 100%; height: 100%; }
 .trip-map-static :is(path, polyline) { fill: none; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
 .trip-preview-outline { stroke: #fff; stroke-width: 10; }
-.trip-preview-remaining { stroke: #a4aff7; stroke-width: 6; }
-.trip-preview-travelled { stroke: #5465ec; stroke-width: 6; }
+.trip-preview-remaining { stroke: #8A94AD; stroke-width: 6; }
+.trip-preview-travelled { stroke: #0B1208; stroke-width: 6; }
 .trip-static-courier, .trip-static-destination { position: absolute; height: auto; transform: translate(-50%, -100%); }
 .trip-static-courier { width: 36px; left: 12%; top: 77%; z-index: 1; }
 .trip-static-destination { width: 32px; left: 83%; top: 42%; }
@@ -118,13 +118,13 @@
   z-index: 4;
   margin-top: -8px;
   padding: 13px 15px 15px;
-  border: 1px solid #fff;
+  border: 1px solid rgba(255, 255, 255, .1);
   border-radius: 20px 20px 0 0;
-  background: linear-gradient(165deg, #fff, #f5f5ff);
+  background: #12151F;
   box-shadow: 0 -4px 20px #33356312;
 }
-.trip-tracking-status, .trip-map-sheet-title { display: flex; align-items: center; gap: 8px; color: #292946; font-size: 14px; font-weight: 790; }
-.trip-tracking-led { flex: 0 0 8px; height: 8px; border-radius: 50%; background: #6973e8; box-shadow: 0 0 0 3px #6973e82a; }
+.trip-tracking-status, .trip-map-sheet-title { display: flex; align-items: center; gap: 8px; color: #F3F5FA; font-size: 14px; font-weight: 790; }
+.trip-tracking-led { flex: 0 0 8px; height: 8px; border-radius: 50%; background: #C3EA5C; box-shadow: 0 0 0 3px #C3EA5C2a; }
 [data-status="on_route"] > :is(.trip-tracking-status, .trip-map-sheet-title) .trip-tracking-led {
   background: #bf6608;
   box-shadow: 0 0 0 3px #ffb66552;
@@ -139,19 +139,19 @@
 :is(.trip-tracking-module, .trip-map-fullscreen) .trip-stage-icon {
   width: 43px;
   height: 43px;
-  border: 1px solid #d5d7ea;
-  background: #eeeff8 !important;
-  color: #282c53;
+  border: 1px solid rgba(255, 255, 255, .12);
+  background: #1A1E2B !important;
+  color: #F3F5FA;
   transition: background .25s, box-shadow .25s;
 }
 :is(.trip-tracking-module, .trip-map-fullscreen) .trip-stage-icon svg { width: 21px; height: 21px; }
-:is(.trip-tracking-module, .trip-map-fullscreen) .trip-timeline li:not(:last-child)::after { top: 22px; height: 3px; background: #d8dbee; }
-:is(.trip-tracking-module, .trip-map-fullscreen) .trip-timeline li[data-complete="true"]::after { background: #7481ed; }
+:is(.trip-tracking-module, .trip-map-fullscreen) .trip-timeline li:not(:last-child)::after { top: 22px; height: 3px; background: rgba(255, 255, 255, .1); }
+:is(.trip-tracking-module, .trip-map-fullscreen) .trip-timeline li[data-complete="true"]::after { background: #C3EA5C; }
 :is(.trip-tracking-module, .trip-map-fullscreen) .trip-timeline li[aria-current] .trip-stage-icon {
-  border: 2px solid #fff;
-  background: #5967e5 !important;
-  color: #fff;
-  box-shadow: 0 0 0 3px #a6b1f37a;
+  border: 2px solid #0B1208;
+  background: #C3EA5C !important;
+  color: #0B1208;
+  box-shadow: 0 0 0 3px #C3EA5C55;
 }
 :is(.trip-tracking-module, .trip-map-fullscreen) .trip-timeline li[aria-current] .trip-on_route { box-shadow: 0 0 0 3px #ffb66585; }
 
