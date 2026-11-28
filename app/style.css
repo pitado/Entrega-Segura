@@ -10,3 +10,15 @@ body {
   margin: 0;
   line-height: 1.45;
 }
+
+/* Marca Pitou */
+@font-face {
+  font-family: "Pitou Instrument";
+  src: url("/redesign/instrument-sans.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+}
+.pitou-logo { display: inline-flex; align-items: center; gap: .45em; color: #141414; text-decoration: none; }
+.pitou-mark { flex: 0 0 auto; display: block; }
+.pitou-wordmark { font-family: "Pitou Instrument", "Inter", Arial, sans-serif; font-weight: 800; letter-spacing: -.06em; line-height: 1; }

@@ -2,12 +2,14 @@
 
 import { useEffect, useRef, useState, type CSSProperties, type FormEvent, type PointerEvent, type ReactNode } from "react";
 import {
-  ArrowRight, Bike, Check, ChefHat, Clipboard, MapPin, Navigation,
+  ArrowRight, Bike, Check, ChefHat, Clipboard, Gift, MapPin, Navigation,
   Minus, Package, Pause, Play, Plus, RefreshCw, Route, Search, Truck, UserRound, Warehouse,
 } from "lucide-react";
 import { wazeDirectionsUrl } from "../../lib/navigation";
 import "./demo.css";
 import DeliveryTrackingMap from "./DeliveryTrackingMap";
+import { PitouMark } from "../components/PitouLogo";
+import { pricing } from "../pricing";
 
 const statuses = {
   preparing: { label: "Em preparo", icon: ChefHat },
@@ -30,8 +32,13 @@ type Order = {
 };
 type Demo = { orders: Order[]; selected: number };
 
-const storageKey = "entrega-segura-test-trip-v3";
+const storageKey = "pitou-demo-v1";
+// Demonstração salva antes da troca de marca: os pedidos são reaproveitados uma vez.
+const legacyKey = "entrega-segura-test-trip-v3";
 const priorKey = "entrega-segura-test-trip-v2";
+// Cashback fictício creditado ao cliente em cada entrega concluída da demonstração.
+const cashbackPerOrder = 4.5;
+const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 const views: Record<View, string> = { merchant: "Estabelecimento", courier: "Entregador", customer: "Cliente" };
 const profileIcons = { merchant: Warehouse, courier: Bike, customer: MapPin };
 const profileOrder = Object.keys(views) as View[];
@@ -332,7 +339,7 @@ export default function DemoPage() {
       return state.orders.some(item => item.id === id) ? { ...state, selected: id } : state;
     }
     try {
-      setDemo(readLocation(readDemo(localStorage.getItem(storageKey), localStorage.getItem(priorKey))));
+      setDemo(readLocation(readDemo(localStorage.getItem(storageKey) ?? localStorage.getItem(legacyKey), localStorage.getItem(priorKey))));
     } catch {
       setDemo(readLocation(initialDemo()));
     }
@@ -469,6 +476,8 @@ export default function DemoPage() {
   }
 
   const activeCount = demo.orders.filter(item => item.status !== "delivered").length;
+  const deliveredCount = demo.orders.length - activeCount;
+  const couriers = Array.from(new Set(demo.orders.map(item => item.courier)));
   const matches = demo.orders.filter(item => {
     const inFilter = filter === "all" || (filter === "active" ? item.status !== "delivered" : item.status === filter);
     return inFilter && `${item.id} ${item.customer} ${item.courier} ${item.destination}`.toLowerCase().includes(search.trim().toLowerCase());
@@ -487,7 +496,7 @@ export default function DemoPage() {
   return <div className="trip">
     <header className="trip-header">
       <div className="trip-header-inner">
-        <span className="trip-brand" aria-hidden="true"><img src="/redesign/route-symbol.webp" alt="" /></span>
+        <a className="trip-brand" href="/" aria-label="Pitou, página inicial"><PitouMark size={60} /><span className="trip-brand-name">pitou</span></a>
         <ProfileNavigation view={view} onChange={switchView} />
       </div>
     </header>
@@ -527,9 +536,27 @@ export default function DemoPage() {
             })}
           </div>
         </div>
+        <div className="trip-plan-grid">
+          <section className="trip-paper trip-plan-card" aria-labelledby="trip-team-title">
+            <span className="trip-plan-icon trip-plan-team"><Bike size={24} aria-hidden="true" /></span>
+            <div>
+              <h2 id="trip-team-title">Entregadores</h2>
+              <p><strong>{couriers.length} de {pricing.includedCouriers}</strong> incluídos no plano</p>
+              <ul className="trip-team">{couriers.map(name => <li key={name}>{name}</li>)}</ul>
+            </div>
+          </section>
+          <section className="trip-paper trip-plan-card" aria-labelledby="trip-cashback-title">
+            <span className="trip-plan-icon trip-plan-cashback"><Gift size={24} aria-hidden="true" /></span>
+            <div>
+              <h2 id="trip-cashback-title">Cashback</h2>
+              <p><strong>{brl.format(deliveredCount * cashbackPerOrder)}</strong> em créditos para {deliveredCount} cliente{deliveredCount === 1 ? "" : "s"}</p>
+              <p className="trip-plan-note">Cada entrega concluída devolve {brl.format(cashbackPerOrder)} para a próxima compra.</p>
+            </div>
+          </section>
+        </div>
         <section className="trip-paper trip-orders" id="pedidos-recentes">
           <div className="trip-order-heading">
-            <h2>Pedidos recentes</h2>
+            <h2>Pedidos e histórico</h2>
             <label className="trip-search"><Search size={19} aria-hidden="true" />
               <input type="search" aria-label="Buscar pedidos" placeholder="Buscar pedidos" value={search} onChange={event => setSearch(event.target.value)} />
             </label>
@@ -592,6 +619,9 @@ export default function DemoPage() {
               <p>{order.status === "on_route" ? `${order.courier} está levando seu pedido.` :
                 order.status === "arrived" ? `${order.courier} chegou ao destino.` :
                   order.status === "delivered" ? "A entrega foi concluída." : "O estabelecimento confirmou seu pedido."}</p>
+              <p className="trip-cashback-note"><Gift size={20} aria-hidden="true" />
+                {order.status === "delivered" ? <span>Você ganhou <strong>{brl.format(cashbackPerOrder)}</strong> de cashback para o próximo pedido.</span>
+                  : <span>Ao receber, você ganha <strong>{brl.format(cashbackPerOrder)}</strong> de cashback.</span>}</p>
             </div>
             <img className="trip-customer-art" src="/redesign/customer.webp" alt="" width={602} height={620} />
             {order.status !== "delivered" && <Pill disabled={order.ready} onClick={() => move({ ready: true })}>
@@ -605,6 +635,7 @@ export default function DemoPage() {
       </>}
       <footer className="trip-footer">
         <span>Dados fictícios salvos neste navegador.</span>
+        <a href="/#precos">Conheça os planos do Pitou</a>
         <button type="button" onClick={resetDemo}><RefreshCw size={15} /> Reiniciar teste</button>
       </footer>
     </main>
