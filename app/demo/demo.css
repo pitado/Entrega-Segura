@@ -558,3 +558,8 @@
 @media (max-width: 900px) { .trip-encontro-grid { grid-template-columns: 1fr; } }
 .trip-hero .trip-live-label { color: var(--trip-blue); }
 .trip-customer-hero .trip-pill:disabled { background: var(--trip-blue); color: var(--trip-on); }
+
+/* Ilustração do entregador com a sacola: apoiada na borda de baixo do cartão. */
+.trip-hero .trip-art.pt-art-box { top: auto; bottom: 0; right: 2%; width: min(46%, 400px); height: auto; }
+.trip-hero .trip-art.pt-art-box svg { height: auto; }
+@media (max-width: 580px) { .trip-hero .trip-art.pt-art-box { width: 46%; right: 0; } }

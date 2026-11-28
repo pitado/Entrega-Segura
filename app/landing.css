@@ -269,7 +269,7 @@
 .lp-final h2 { font-size: clamp(36px, 4.4vw, 56px); }
 .lp-final p { font-size: 18px; opacity: .74; }
 .lp-final-moto { position: absolute; right: 16%; bottom: 0; width: min(420px, 38%); }
-.lp-final-box { position: absolute; right: 3%; bottom: 4%; width: min(190px, 16%); }
+.lp-final-box { position: absolute; right: 2%; bottom: 0; width: min(560px, 46%); }
 .lp-footer { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 28px; padding-block: clamp(56px, 7vw, 88px) 40px; color: var(--lp-text-2); font-size: 15px; }
 .lp-footer-brand p { margin-top: 12px; max-width: 320px; }
 .lp-footer nav { display: grid; gap: 10px; align-content: start; }
@@ -315,8 +315,8 @@
   .lp .lp-addon-price { margin-left: 0; width: 100%; }
   .lp-addon-art { display: none; }
   .lp-final { flex-direction: column; align-items: flex-start; padding-bottom: 210px; border-radius: 40px; }
-  .lp-final-moto { right: 22%; width: 70%; }
-  .lp-final-box { width: 28%; }
+  .lp-final { padding-bottom: 250px; }
+  .lp-final-box { right: 0; width: min(380px, 92%); }
   .lp-final .lp-btn { width: 100%; }
   .lp-footer { grid-template-columns: 1fr 1fr; }
   .lp-footer-brand { grid-column: 1 / -1; }
@@ -355,3 +355,5 @@
   .lp-secure-phones > .lp-phone { width: min(300px, 100%); margin: 0 auto; }
   .lp-secure-second { display: none !important; }
 }
+
+.lp-faq-handoff { right: -10px; bottom: 0; width: 58%; }
