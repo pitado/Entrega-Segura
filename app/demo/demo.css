@@ -54,7 +54,7 @@
 }
 .trip-brand { display: inline-flex; flex: 0 0 auto; gap: 12px; text-decoration: none; }
 .trip-brand .pitou-mark { width: 60px !important; height: 60px !important; font-size: 36px !important; border-radius: 18px !important; }
-.trip-brand-name { font-family: var(--p-display); font-size: 32px; font-weight: 700; letter-spacing: -.04em; color: var(--trip-ink); }
+.trip-brand-name { font-family: var(--p-display); font-size: 32px; font-weight: 600; letter-spacing: -.04em; color: var(--trip-ink); }
 .trip-plan-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
 .trip-plan-card { display: flex; gap: 18px; align-items: flex-start; padding: clamp(18px, 2vw, 26px); }
 .trip-plan-card h2 { font-size: clamp(22px, 2vw, 28px); }

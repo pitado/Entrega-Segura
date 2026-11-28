@@ -40,7 +40,7 @@ const faq = [
 const structuredData = {
   "@context": "https://schema.org",
   "@graph": [
-    { "@type": "Organization", "@id": `${siteUrl}/#organizacao`, name: siteName, url: siteUrl, logo: `${siteUrl}/icon.svg` },
+    { "@type": "Organization", "@id": `${siteUrl}/#organizacao`, name: siteName, url: siteUrl, logo: `${siteUrl}/logo.png` },
     { "@type": "WebSite", "@id": `${siteUrl}/#site`, name: siteName, url: siteUrl, inLanguage: "pt-BR", publisher: { "@id": `${siteUrl}/#organizacao` } },
     {
       "@type": "SoftwareApplication",
