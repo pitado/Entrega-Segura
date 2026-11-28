@@ -63,7 +63,7 @@ Não publique nenhuma credencial. Habilitar faturamento no Mapbox depende de aut
 
 Build: `npx opennextjs-cloudflare build`; deploy: `npx wrangler deploy`.
 
-**Publicação automática:** cada push em `main` roda `.github/workflows/deploy.yml`, que compila e publica no Worker `pitou`. Precisa do secret `CLOUDFLARE_API_TOKEN` no repositório (Cloudflare → My Profile → API Tokens → modelo "Edit Cloudflare Workers"). Sem o secret, o workflow apenas avisa e não publica. Também pode ser disparado manualmente em Actions → "Publicar no Cloudflare" → Run workflow.
+**Publicação automática:** o Worker `pitou` está ligado ao repositório pelo Cloudflare Workers Builds (Worker → Settings → Builds), que compila e publica a cada push em `main` com os comandos acima. O workflow `.github/workflows/deploy.yml` é uma alternativa: só publica se o secret `CLOUDFLARE_API_TOKEN` existir no repositório (sem ele, apenas avisa). Para não publicar duas vezes, use só um dos dois.
 
 ### Domínio pitou.com.br
 
