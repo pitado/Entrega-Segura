@@ -63,12 +63,16 @@ await check("Rotas pagas não podem ser chamadas sem token válido",async()=>{
  const res=await post("/api/maps/route",{origin:[-51.9,-23.4],destination:[-51.8,-23.3]});
  assert.ok([403,503].includes(res.status),"Resposta inesperada: "+res.status);
 });
-await check("Área administrativa protegida",async()=>{
- const auth=await request("/api/admin/session");
- assert.equal(auth.status,200);
- assert.equal(auth.body.authenticated,false);
- const res=await request("/api/admin");
- assert.equal(res.status,401);
+await check("Painel do estabelecimento protegido",async()=>{
+ const me=await request("/api/auth/me");
+ assert.equal(me.status,401);
+ for(const path of ["/api/painel","/api/painel/history","/api/painel/customers","/api/painel/menu"]){
+  const res=await request(path);
+  assert.equal(res.status,401,path+" "+res.status);
+ }
+ const login=await request("/entrar",{headers:{Accept:"text/html"}});
+ assert.equal(login.status,200);
+ assert.match(String(login.body),/Entrar/);
 });
 await check("Rejeição de links inválidos",async()=>{
  const res=await request("/api/tracking/token-invalido");

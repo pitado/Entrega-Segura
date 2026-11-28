@@ -60,7 +60,8 @@ export default function Home() {
           <a href="#como-funciona">Como funciona</a>
           <a href="#precos">Preços</a>
         </nav>
-        <a className="lp-btn lp-btn-dark lp-header-cta" href="/demo">Ver demonstração</a>
+        <a className="lp-header-login" href="/entrar">Entrar</a>
+        <a className="lp-btn lp-btn-dark lp-header-cta" href="/entrar?criar">Criar conta</a>
       </div>
     </header>
 
@@ -71,8 +72,8 @@ export default function Home() {
           <h1>Suas entregas sob controle, do pedido à porta do cliente.</h1>
           <p>O Pitou reúne a gestão dos seus entregadores, o acompanhamento em tempo real e um cashback que traz o cliente de volta. Tudo em um único plano mensal, sem fidelidade.</p>
           <div className="lp-actions">
-            <a className="lp-btn lp-btn-dark" href="/demo">Experimentar a demonstração <ArrowRight size={20} aria-hidden="true" /></a>
-            <a className="lp-btn lp-btn-light" href="#precos">Ver preços</a>
+            <a className="lp-btn lp-btn-dark" href="/entrar?criar">Criar minha conta <ArrowRight size={20} aria-hidden="true" /></a>
+            <a className="lp-btn lp-btn-light" href="/demo">Ver demonstração</a>
           </div>
           <p className="lp-hero-note">A partir de <strong>R$ {money(pricing.base)}/mês</strong> com até {pricing.includedCouriers} entregadores.</p>
         </div>
@@ -133,7 +134,7 @@ export default function Home() {
               {included.map(item => <li key={item}><Check size={20} aria-hidden="true" />{item}</li>)}
             </ul>
             <p className="lp-plan-extra"><Bike size={20} aria-hidden="true" /><span>Mais de {pricing.includedCouriers} entregadores? <strong>+ R$ {money(pricing.extraCourier)} por entregador/mês.</strong></span></p>
-            <a className="lp-btn lp-btn-dark lp-btn-block" href="/demo">Conhecer na demonstração <ArrowRight size={20} aria-hidden="true" /></a>
+            <a className="lp-btn lp-btn-dark lp-btn-block" href="/entrar?criar">Assinar o Pitou <ArrowRight size={20} aria-hidden="true" /></a>
           </article>
 
           <div className="lp-pricing-side">
@@ -169,8 +170,8 @@ export default function Home() {
       <section className="lp-wrap">
         <div className="lp-final">
           <h2>Pronto para entregar com mais segurança?</h2>
-          <p>Teste o fluxo completo agora e veja como fica a experiência do seu cliente.</p>
-          <a className="lp-btn lp-btn-light" href="/demo">Ver demonstração <ArrowRight size={20} aria-hidden="true" /></a>
+          <p>Crie sua conta, cadastre seus entregadores e envie o primeiro pedido hoje.</p>
+          <a className="lp-btn lp-btn-light" href="/entrar?criar">Criar minha conta <ArrowRight size={20} aria-hidden="true" /></a>
         </div>
       </section>
     </main>
