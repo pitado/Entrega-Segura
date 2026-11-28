@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "./db";
 import { randomToken, safeEqual, sha256 } from "./security";
+import { accessFor, billingColumns, type Access } from "./billing";
 
 export const SESSION_COOKIE = "pitou_session";
 const SESSION_DAYS = 30;
@@ -31,6 +32,8 @@ export async function verifyPassword(password: string, stored: string) {
 export type Account = {
   user: { id: string; name: string; email: string; role: string };
   establishment: { id: string; name: string; slug: string | null };
+  /** Se o painel está liberado (assinatura paga, teste grátis, cortesia ou administrador). */
+  access: Access;
 };
 
 function readCookie(req: Request, name: string) {
@@ -46,7 +49,7 @@ export async function currentAccount(req: Request): Promise<Account | null> {
   const token = readCookie(req, SESSION_COOKIE);
   if (!/^[a-f0-9]{64}$/.test(token)) return null;
   const rows = await db().query(
-    `SELECT u.id AS user_id,u.name AS user_name,u.email,u.role,e.id AS establishment_id,e.name AS establishment_name,e.slug
+    `SELECT u.id AS user_id,u.name AS user_name,u.email,u.role,e.id AS establishment_id,e.name AS establishment_name,e.slug,${billingColumns}
        FROM user_sessions s JOIN establishment_users u ON u.id=s.user_id JOIN establishments e ON e.id=u.establishment_id
       WHERE s.token_hash=$1 AND s.expires_at>now() LIMIT 1`, [await sha256(token)]);
   const r = rows[0];
@@ -54,6 +57,7 @@ export async function currentAccount(req: Request): Promise<Account | null> {
   return {
     user: { id: r.user_id, name: r.user_name, email: r.email, role: r.role },
     establishment: { id: r.establishment_id, name: r.establishment_name, slug: r.slug },
+    access: accessFor(r as never, String(r.email)),
   };
 }
 

@@ -6,12 +6,13 @@ export const runtime = "nodejs";
 
 // Visão principal do painel: estabelecimento, plano, entregadores, pedidos em andamento e números do dia.
 export async function GET(req: Request) {
-  return withAccount(req, async ({ establishment, user }) => {
+  return withAccount(req, async ({ establishment, user, access }) => {
     const sql = db();
     const id = establishment.id;
     const [est, couriers, orders, stats] = await Promise.all([
       sql.query(`SELECT id,name,slug,phone,address,latitude,longitude,logo_url,brand_color,menu_description,menu_enabled,
-        extra_couriers,cashback_percent::float8 AS cashback_percent,cashback_min_order::float8 AS cashback_min_order
+        extra_couriers,cashback_percent::float8 AS cashback_percent,cashback_min_order::float8 AS cashback_min_order,
+        subscription_status,subscription_amount::float8 AS subscription_amount,subscription_payer_email,paid_until
         FROM establishments WHERE id=$1`, [id]),
       sql.query(`SELECT c.id,c.name,c.phone,c.active,c.created_at,(t.revoked_at IS NULL AND t.courier_id IS NOT NULL) AS has_link,
         (SELECT count(*)::int FROM orders o WHERE o.courier_id=c.id AND o.status IN ('preparing','on_route','arrived')) AS active_orders,
@@ -36,12 +37,14 @@ export async function GET(req: Request) {
         FROM orders WHERE establishment_id=$1 AND demo_session_id IS NULL
           AND created_at>=date_trunc('day',now() AT TIME ZONE 'America/Sao_Paulo') AT TIME ZONE 'America/Sao_Paulo'`, [id]),
     ]);
-    const e = est[0];
+    const { subscription_status, subscription_amount, subscription_payer_email, paid_until, ...e } = est[0];
     const activeCouriers = couriers.filter(c => c.active).length;
     return ok({
       user,
       establishment: e,
       plan: planSummary(Number(e.extra_couriers), Boolean(e.menu_enabled), activeCouriers),
+      access,
+      subscription: { status: subscription_status, amount: subscription_amount, payerEmail: subscription_payer_email, paidUntil: paid_until },
       couriers, orders, today: stats[0],
     });
   });

@@ -21,7 +21,9 @@ export type Order = {
   latitude: number | null; longitude: number | null; location_at: string | null;
 };
 export type Today = { delivered: number; active: number; revenue: number; cashback: number; avg_minutes: number | null };
+export type Access = { active: boolean; reason: "admin" | "exempt" | "paid" | "trial" | "none"; trialEndsAt: string | null; paidUntil: string | null };
+export type Subscription = { status: string | null; amount: number | null; payerEmail: string | null; paidUntil: string | null };
 export type Overview = {
   user: { id: string; name: string; email: string };
-  establishment: Establishment; plan: Plan; couriers: Courier[]; orders: Order[]; today: Today;
+  establishment: Establishment; plan: Plan; access: Access; subscription: Subscription; couriers: Courier[]; orders: Order[]; today: Today;
 };

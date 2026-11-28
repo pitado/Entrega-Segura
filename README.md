@@ -27,6 +27,7 @@ O esquema fica em `db/`. Para aplicar as mudanças deste painel num banco que j�
 
 ```bash
 psql "$DATABASE_URL" -f db/migrations/001_painel_real.sql
+psql "$DATABASE_URL" -f db/migrations/002_assinatura.sql
 ```
 
 A migração só cria tabelas, colunas e índices, e pode ser executada mais de uma vez. `db/000_base.sql` reconstrói o esquema anterior para desenvolvimento local; não rode em produção.
@@ -51,6 +52,10 @@ Worker `pitou`, GitHub branch `main`. Configure em **Settings → Variables and 
 | `DATABASE_URL` | Secret | Obrigatório: contas, pedidos, GPS, cashback e cardápio no Neon |
 | `PITOU_SIGNUP_CODE` | Secret | Opcional. Se definido, o cadastro de novos estabelecimentos exige este código de convite |
 | `MAPBOX_ACCESS_TOKEN` | Secret | Opcional: rota, previsão de chegada e localização automática dos endereços |
+| `MERCADOPAGO_ACCESS_TOKEN` | Secret | Assinatura mensal. `TEST-...` no sandbox, `APP_USR-...` em produção |
+| `MERCADOPAGO_WEBHOOK_SECRET` | Secret | Assinatura secreta do webhook do Mercado Pago |
+| `PITOU_ADMIN_EMAILS` | Variável | E-mails com acesso liberado sem pagar, separados por vírgula |
+| `PITOU_TRIAL_DAYS` | Variável | Dias de teste grátis para contas novas (padrão 7; `0` desliga) |
 
 Não publique nenhuma credencial. Habilitar faturamento no Mapbox depende de autorização específica do responsável pela conta. O sistema não ativa serviços pagos automaticamente.
 
@@ -67,6 +72,16 @@ O `wrangler.jsonc` publica o Worker como **Custom Domain** em `pitou.com.br` e `
 3. Publique o Worker. A Cloudflare cria os registros DNS e o certificado TLS dos dois endereços automaticamente.
 
 Enquanto a zona não estiver ativa na conta, o deploy com estas rotas falha. Nesse caso, conclua os passos 1 e 2 antes de publicar.
+
+## Assinatura (Mercado Pago)
+
+O painel só abre com acesso liberado: assinatura paga, teste grátis, e-mail em `PITOU_ADMIN_EMAILS` ou conta de cortesia (`UPDATE establishments SET billing_exempt=true WHERE ...`). Sem acesso, o painel mostra a tela de assinar e o cardápio público sai do ar; links de entregador e de acompanhamento continuam funcionando para terminar as entregas em andamento.
+
+1. Em **Mercado Pago → Suas integrações**, crie uma aplicação e copie o *Access Token* (de teste primeiro) para `MERCADOPAGO_ACCESS_TOKEN`.
+2. Em **Webhooks**, cadastre `https://pitou.com.br/api/billing/webhook`, marque o evento **Planos e assinaturas** e copie a assinatura secreta para `MERCADOPAGO_WEBHOOK_SECRET`.
+3. Assinar cria uma assinatura mensal (`/preapproval`) com o valor do plano; o acesso só é liberado quando o Mercado Pago confirma. Mudar vagas ou o Menu Digital atualiza o valor; cancelar mantém o acesso até o fim do mês pago.
+
+No sandbox, o e-mail do pagador precisa ser de um usuário de teste do Mercado Pago, e o pagamento usa cartões de teste.
 
 ## Auditoria e testes
 
@@ -88,6 +103,8 @@ O teste de ponta a ponta do painel cria contas e pedidos de teste, então roda s
 ```bash
 E2E_BASE_URL=http://localhost:3000 node scripts/e2e-painel.mjs
 ```
+
+O teste da assinatura (`scripts/e2e-assinatura.mjs`) roda contra um Mercado Pago falso local (`MERCADOPAGO_API_URL`) e um Postgres local; veja as variáveis no topo do arquivo.
 
 Para desenvolver sem acesso ao Neon, `NEON_LOCAL_ENDPOINT` aponta o driver para um servidor local compatível com o protocolo HTTP do Neon.
 

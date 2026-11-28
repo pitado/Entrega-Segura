@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { MapPin } from "lucide-react";
 import { api, brl } from "../components/client";
 import type { Overview } from "./types";
+import Subscription from "./Subscription";
 
 export default function AccountTab({ data, refresh }: { data: Overview; refresh: () => Promise<void> }) {
   const { establishment: e, plan, user } = data;
@@ -34,6 +35,7 @@ export default function AccountTab({ data, refresh }: { data: Overview; refresh:
 
   const extraTotal = plan.extraCouriers * plan.extraCourierPrice;
   return <>
+    <Subscription onChange={refresh} />
     <div className="pt-card pt-stack">
       <h2>Seu plano</h2>
       <div className="pt-table-wrap"><table className="pt-table">
@@ -50,7 +52,7 @@ export default function AccountTab({ data, refresh }: { data: Overview; refresh:
         <b>{plan.extraCouriers}</b>
         <button className="pt-btn pt-btn-light pt-btn-sm" disabled={busy} onClick={() => save({ extra_couriers: plan.extraCouriers + 1 }, "Vaga adicionada.")}>+ Adicionar vaga</button>
       </div>
-      <p className="pt-small pt-muted">Sem fidelidade. Cancele quando quiser e pague somente enquanto utilizar. A cobrança mensal é combinada com a equipe Pitou.</p>
+      <p className="pt-small pt-muted">Sem fidelidade. Cancele quando quiser e pague somente enquanto utilizar. Mudanças nas vagas ou no Menu Digital ajustam o valor da assinatura a partir da próxima cobrança.</p>
     </div>
     <form className="pt-card pt-stack" onSubmit={profile}>
       <h2>Dados do estabelecimento</h2>

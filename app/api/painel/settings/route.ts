@@ -4,6 +4,7 @@ import { geocode } from "../../../../lib/orders";
 import { withAccount } from "../../../../lib/panel";
 import { validSlug } from "../../../../lib/slug";
 import { pricing } from "../../../pricing";
+import { monthlyAmount, updatePreapproval } from "../../../../lib/billing";
 
 export const runtime = "nodejs";
 
@@ -75,6 +76,24 @@ export async function PATCH(req: Request) {
     if (!sets.length) return fail("Nada para atualizar");
     args.push(eid);
     await sql.query(`UPDATE establishments SET ${sets.join(",")},updated_at=now() WHERE id=$${args.length}`, args);
+    if ("extra_couriers" in body || "menu_enabled" in body) return ok({ ok: true, billing: await syncAmount(eid) });
     return ok({ ok: true });
   });
+}
+
+// Mudou entregadores adicionais ou Menu Digital: ajusta o valor da assinatura no Mercado Pago a partir da próxima cobrança.
+async function syncAmount(eid: string): Promise<"updated" | "unchanged" | "failed"> {
+  const sql = db();
+  const rows = await sql.query("SELECT extra_couriers,menu_enabled,mp_preapproval_id,subscription_status,subscription_amount::float8 AS amount FROM establishments WHERE id=$1", [eid]);
+  const e = rows[0];
+  const amount = monthlyAmount(Number(e.extra_couriers), Boolean(e.menu_enabled));
+  if (!e.mp_preapproval_id || e.subscription_status !== "authorized" || Number(e.amount) === amount) return "unchanged";
+  try {
+    await updatePreapproval(String(e.mp_preapproval_id), { auto_recurring: { transaction_amount: amount, currency_id: "BRL" } });
+    await sql.query("UPDATE establishments SET subscription_amount=$2,subscription_updated_at=now() WHERE id=$1", [eid, amount]);
+    return "updated";
+  } catch (err) {
+    console.error("mercadopago valor", err);
+    return "failed";
+  }
 }
