@@ -21,12 +21,12 @@ export function PitouMark({ size = 40 }: { size?: number }) {
 }
 
 /** Logo completa: símbolo + "pitou". O nome usa a cor do texto (currentColor). */
-export default function PitouLogo({ size = 40, className = "" }: { size?: number; className?: string }) {
+export default function PitouLogo({ size = 40, className = "", symbolOnly = false }: { size?: number; className?: string; symbolOnly?: boolean }) {
   const h = Math.round(size * 0.82);
   return <span className={`pitou-logo ${className}`.trim()}>
-    <svg className="pitou-lockup" height={h} width={Math.round(h * 2257 / 778)} viewBox="-50 -276 2257 778" role="img" aria-label="Pitou">
+    <svg className="pitou-lockup" height={h} width={Math.round(h * (symbolOnly ? 724 : 2257) / 778)} viewBox={symbolOnly ? "-50 -276 724 778" : "-50 -276 2257 778"} role="img" aria-label="Pitou">
       <Route color="var(--p-lime, #C3EA5C)" />
-      <path transform="translate(739.6 150) scale(0.5618)" d={WORD} fill="currentColor" />
+      {!symbolOnly && <path transform="translate(739.6 150) scale(0.5618)" d={WORD} fill="currentColor" />}
     </svg>
   </span>;
 }
