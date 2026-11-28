@@ -33,7 +33,7 @@ const faq = [
   { q: "O cliente precisa instalar algum aplicativo?", a: "Não. O cliente acompanha a entrega por um link que abre direto no navegador do celular." },
   { q: "Como funciona o código de entrega?", a: "Quando o entregador chega, o cliente vê no celular um código de 4 dígitos. O entregador digita esse código para concluir a entrega, e o painel mostra que ela foi verificada." },
   { q: `E se eu tiver mais de ${pricing.includedCouriers} entregadores?`, a: `Cada entregador além dos ${pricing.includedCouriers} incluídos custa R$ ${money(pricing.extraCourier)} por mês.` },
-  { q: "O Menu Digital é obrigatório?", a: `Não. É um adicional opcional de R$ ${money(pricing.menu)} por mês, para ter um cardápio online com a identidade do seu estabelecimento.` },
+  { q: "O Menu Digital é obrigatório?", a: `Não. É um adicional de R$ ${money(pricing.menu)} por mês, para ter um cardápio online com a identidade do seu estabelecimento.` },
 ];
 
 /** Dados estruturados (schema.org) para o Google entender a empresa, o produto, o preço e as perguntas frequentes. */
@@ -236,13 +236,12 @@ export default function Home() {
 
           <article className="lp-tile lp-dark lp-tile-menu">
             <div className="lp-tile-copy">
-              <span className="lp-pill-soft">Adicional</span>
               <h3>Menu Digital Próprio</h3>
               <p>Um cardápio online com a cara do seu estabelecimento: logotipo, produtos, fotos, preços e um link exclusivo para divulgar.</p>
             </div>
             <ul className="lp-foods" aria-label="Exemplo de cardápio">
               {([["burger", "Smash burger", "28,90", "yellow"], ["juice", "Suco natural", "9,50", "soft"], ["fries", "Batata média", "14,00", "coral"]] as const).map(([art, name, price, tone]) =>
-                <li key={name}><span className="lp-food-art" data-tone={tone}><img src={`https://images.pexels.com/photos/${({ burger: 15226134, juice: 6829918, fries: 13187600 } as const)[art]}/pexels-photo-${({ burger: 15226134, juice: 6829918, fries: 13187600 } as const)[art]}.jpeg?auto=compress&cs=tinysrgb&w=480`} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "inherit", minHeight: 0 }} /></span><span><b>{name}</b><small>R$ {price}</small></span><span className="lp-add"><Plus size={16} /></span></li>)}
+                <li key={name}><span className="lp-food-art" data-tone={tone}><img src={`https://images.pexels.com/photos/${({ burger: 15226134, juice: 15560947, fries: 13187600 } as const)[art]}/pexels-photo-${({ burger: 15226134, juice: 15560947, fries: 13187600 } as const)[art]}.jpeg?auto=compress&cs=tinysrgb&w=480`} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "inherit", minHeight: 0 }} /></span><span><b>{name}</b><small>R$ {price}</small></span><span className="lp-add"><Plus size={16} /></span></li>)}
             </ul>
           </article>
         </div>
