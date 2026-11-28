@@ -1,5 +1,24 @@
+/* Identidade Pitou: fundo escuro, verde-limão e tipografia Sora + Figtree. */
 :root {
-  color-scheme: light;
+  color-scheme: dark;
+  --p-bg: #080A10;
+  --p-bg-2: #0A0E19;
+  --p-surface: #12151F;
+  --p-surface-2: #181C28;
+  --p-line: rgba(255, 255, 255, .09);
+  --p-line-strong: rgba(255, 255, 255, .16);
+  --p-text: #F3F5FA;
+  --p-text-2: #C7CEDF;
+  --p-text-3: #9AA3B8;
+  --p-lime: #C3EA5C;
+  --p-lime-ink: #0B1208;
+  --p-lime-soft: #EEF8DA;
+  --p-yellow: #FFD25A;
+  --p-coral: #FF8A7A;
+  --p-coral-ink: #2A0D08;
+  --p-glass: rgba(14, 18, 30, .78);
+  --p-display: var(--font-display), "Sora", "Figtree", system-ui, sans-serif;
+  --p-body: var(--font-body), "Figtree", system-ui, sans-serif;
 }
 
 *, *::before, *::after {
@@ -9,6 +28,9 @@
 body {
   margin: 0;
   line-height: 1.45;
+  background: var(--p-bg);
+  color: var(--p-text);
+  font-family: var(--p-body);
 }
 
 /* Marca Pitou */
@@ -19,6 +41,10 @@ body {
   font-weight: 400 700;
   font-display: swap;
 }
-.pitou-logo { display: inline-flex; align-items: center; gap: .45em; color: #141414; text-decoration: none; }
-.pitou-mark { flex: 0 0 auto; display: block; }
-.pitou-wordmark { font-family: "Pitou Instrument", "Inter", Arial, sans-serif; font-weight: 800; letter-spacing: -.06em; line-height: 1; }
+.pitou-logo { display: inline-flex; align-items: center; color: var(--p-text); text-decoration: none; }
+.pitou-wordmark { font-family: var(--p-display); font-weight: 700; letter-spacing: -.04em; line-height: 1; }
+.pitou-mark { flex: 0 0 auto; display: inline-grid; place-items: center; background: var(--p-lime); color: var(--p-lime-ink); font-family: var(--p-display); font-weight: 700; letter-spacing: -.04em; line-height: 1; }
+
+/* Ilustrações da marca */
+.pt-art { display: inline-block; line-height: 0; }
+.pt-art svg { display: block; width: 100%; height: auto; }

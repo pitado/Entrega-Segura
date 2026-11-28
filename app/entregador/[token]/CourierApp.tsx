@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Check, LocateFixed, MapPin, Navigation, Phone } from "lucide-react";
+import Art from "../../components/Art";
 import PitouLogo from "../../components/PitouLogo";
 import { api, brl, mapsLinks, phone, statusLabel, time, toPoint } from "../../components/client";
 
@@ -107,13 +108,15 @@ export default function CourierApp({ token }: { token: string }) {
   </div></main>;
 
   return <main className="pt"><div className="pt-narrow">
-    <div className="pt-between">
-      <PitouLogo size={34} />
-      <span className="pt-small pt-muted">{data.today.delivered} entregue{data.today.delivered === 1 ? "" : "s"} hoje</span>
+    <div className="pt-brand-head">
+      <span className="pt-grow"><PitouLogo size={32} /></span>
+      <span className={"pt-badge " + (gps.state === "on" ? "on_route" : "")}>{gps.state === "on" ? "Localização ao vivo" : "Localização desligada"}</span>
     </div>
-    <div>
+    <div className="pt-hero-card">
+      <span className="pt-hero-kicker">Entregas de {data.courier.establishment_name}</span>
       <h1>Olá, {data.courier.name.split(" ")[0]}</h1>
-      <p className="pt-muted">Entregas de {data.courier.establishment_name}</p>
+      <p>{data.today.delivered} entregue{data.today.delivered === 1 ? "" : "s"} hoje</p>
+      <Art name="moto" label={false} />
     </div>
 
     <div className="pt-card pt-stack">

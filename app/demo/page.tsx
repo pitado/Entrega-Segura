@@ -496,7 +496,7 @@ export default function DemoPage() {
   return <div className="trip">
     <header className="trip-header">
       <div className="trip-header-inner">
-        <a className="trip-brand" href="/" aria-label="Pitou, página inicial"><PitouMark size={60} /><span className="trip-brand-name">pitou</span></a>
+        <a className="trip-brand" href="/" aria-label="Pitou, página inicial"><PitouMark size={60} /><span className="trip-brand-name">Pitou</span></a>
         <ProfileNavigation view={view} onChange={switchView} />
       </div>
     </header>

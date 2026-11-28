@@ -1,6 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
+import { Figtree, Sora } from "next/font/google";
 import "./style.css";
+
+// Tipografia da marca: Sora nos títulos e Figtree no texto.
+const sora = Sora({ subsets: ["latin"], weight: ["500", "600", "700"], variable: "--font-display", display: "swap" });
+const figtree = Figtree({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--font-body", display: "swap" });
 
 const siteUrl = "https://pitou.com.br";
 
@@ -21,8 +26,8 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export const viewport: Viewport = { viewportFit: "cover" };
+export const viewport: Viewport = { viewportFit: "cover", themeColor: "#080A10" };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
-  return <html lang="pt-BR"><body>{children}</body></html>;
+  return <html lang="pt-BR" className={`${sora.variable} ${figtree.variable}`}><body>{children}</body></html>;
 }

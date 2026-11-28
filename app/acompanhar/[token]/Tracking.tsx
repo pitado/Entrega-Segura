@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Gift, LocateFixed, MenuSquare, Phone } from "lucide-react";
 import LiveMap from "../../components/LiveMap";
+import Art from "../../components/Art";
 import PitouLogo from "../../components/PitouLogo";
 import { api, brl, phone, statusLabel, time, toPoint } from "../../components/client";
 
@@ -82,14 +83,16 @@ export default function Tracking({ token }: { token: string }) {
       {order.establishment_phone && <a className="pt-icon-btn" href={"tel:" + order.establishment_phone} aria-label={"Ligar para " + phone(order.establishment_phone)}><Phone size={18} /></a>}
     </div>
 
-    <div className="pt-card pt-stack">
+    <div className={"pt-hero-card" + (order.status === "preparing" ? " pt-hero-yellow" : order.status === "delivered" || order.status === "cancelled" ? " pt-hero-soft" : "")}>
+      <span className="pt-hero-kicker">{statusLabel[order.status] || "Pedido"}</span>
       <h1>{headline[order.status]}</h1>
-      {order.status !== "cancelled" && <div className="pt-steps" aria-label="Etapas da entrega">
-        {steps.map((s, i) => <div key={s} className={"pt-step" + (i <= stepIndex ? " done" : "")}><i />{statusLabel[s]}</div>)}
-      </div>}
-      {order.courier_name && active && order.status !== "preparing" && <p className="pt-muted">{order.courier_name} está levando o seu pedido.</p>}
-      {order.status === "delivered" && order.delivered_at && <p className="pt-muted">Entregue às {time(order.delivered_at)}. Bom apetite!</p>}
+      {order.courier_name && active && order.status !== "preparing" && <p>{order.courier_name} está levando o seu pedido.</p>}
+      {order.status === "delivered" && order.delivered_at && <p>Entregue às {time(order.delivered_at)}. Bom apetite!</p>}
+      <Art name={order.status === "delivered" || order.status === "preparing" ? "box" : "moto"} label={false} />
     </div>
+    {order.status !== "cancelled" && <div className="pt-card"><div className="pt-steps" aria-label="Etapas da entrega">
+      {steps.map((s, i) => <div key={s} className={"pt-step" + (i <= stepIndex ? " done" : "")}><i />{statusLabel[s]}</div>)}
+    </div></div>}
 
     {active && order.status !== "preparing" && <LiveMap courier={courier} destination={destination} routeToken={token}
       emptyText="Assim que o GPS do entregador estiver ativo, ele aparece aqui." />}
@@ -124,6 +127,6 @@ export default function Tracking({ token }: { token: string }) {
         {updates.map((u, i) => <li key={i}><time>{time(u.created_at)}</time><span>{statusLabel[u.status] || u.status}</span></li>)}
       </ol>
     </details>}
-    <p className="pt-footer-note">Entrega acompanhada por <a href="/" aria-label="Pitou"><span className="pitou-logo"><span className="pitou-wordmark">pitou</span></span></a></p>
+    <p className="pt-footer-note">Entrega acompanhada por <a href="/" aria-label="Pitou"><PitouLogo size={18} /></a></p>
   </div></main>;
 }

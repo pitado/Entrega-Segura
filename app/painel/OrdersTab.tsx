@@ -65,7 +65,7 @@ function OrderItem({ order: o, current, onClick }: { order: Order; current: bool
       <span>{time(o.created_at)}</span>
       <span>{o.courier_name ? "· " + o.courier_name : "· sem entregador"}</span>
       {o.total_amount != null && <span>· {brl(o.total_amount)}</span>}
-      {o.customer_ready && active(o) && <span style={{ color: "var(--green-strong)", fontWeight: 700 }}>· cliente pronto</span>}
+      {o.customer_ready && active(o) && <span style={{ color: "var(--lime)", fontWeight: 700 }}>· cliente pronto</span>}
     </span>
   </button>;
 }
