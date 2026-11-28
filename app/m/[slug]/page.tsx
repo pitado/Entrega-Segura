@@ -6,6 +6,7 @@ import { validSlug } from "../../../lib/slug";
 import { accessFor, billingColumns } from "../../../lib/billing";
 import MenuView, { type MenuProduct } from "./MenuView";
 import "../../app.css";
+import { jsonLd, siteUrl } from "../../../lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -36,8 +37,16 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!data) return { title: { absolute: "Cardápio · Pitou" }, robots: { index: false } };
   return {
     title: { absolute: `${data.establishment.name} · Cardápio` },
-    description: data.establishment.menu_description || `Cardápio de ${data.establishment.name}`,
-    robots: { index: false, follow: false },
+    description: data.establishment.menu_description || `Cardápio de ${data.establishment.name}. Veja os produtos e preços.`,
+    alternates: { canonical: `/m/${(await params).slug}` },
+    openGraph: {
+      type: "website",
+      title: `${data.establishment.name} · Cardápio`,
+      description: data.establishment.menu_description || `Cardápio de ${data.establishment.name}`,
+      url: `/m/${(await params).slug}`,
+      ...(data.establishment.logo_url ? { images: [{ url: data.establishment.logo_url, alt: "Logo " + data.establishment.name }] } : {}),
+    },
+    robots: { index: true, follow: true },
   };
 }
 
@@ -45,7 +54,31 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
   const data = await load((await params).slug);
   if (!data) notFound();
   const { establishment: e, products } = data;
+  const slug = (await params).slug;
+  // Dados estruturados do cardápio (schema.org Restaurant + Menu).
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "Restaurant",
+    name: e.name,
+    url: `${siteUrl}/m/${slug}`,
+    ...(e.logo_url ? { image: e.logo_url } : {}),
+    ...(e.menu_description ? { description: e.menu_description } : {}),
+    ...(e.phone ? { telephone: e.phone } : {}),
+    ...(e.address ? { address: e.address } : {}),
+    hasMenu: {
+      "@type": "Menu",
+      inLanguage: "pt-BR",
+      hasMenuItem: products.slice(0, 100).map(p => ({
+        "@type": "MenuItem",
+        name: p.name,
+        ...(p.description ? { description: p.description } : {}),
+        ...(p.photo_url ? { image: p.photo_url } : {}),
+        offers: { "@type": "Offer", price: Number(p.price).toFixed(2), priceCurrency: "BRL" },
+      })),
+    },
+  };
   return <main className="pt" style={{ ["--brand" as string]: e.brand_color || "#141414" }}>
+    <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(structuredData)} />
     <header className="pt-menu-hero">
       <div className="pt-menu-hero-inner">
         {e.logo_url && <img src={e.logo_url} alt={"Logo " + e.name} />}
