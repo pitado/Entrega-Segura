@@ -15,9 +15,10 @@ Aplicação responsiva para **estabelecimento, motoboy e consumidor**, com Next.
   - **Clientes e cashback:** porcentagem e pedido mínimo definidos pelo estabelecimento. O cliente, identificado pelo telefone, ganha saldo quando a entrega é concluída e pode usá-lo no próximo pedido. Cancelar um pedido devolve o saldo usado.
   - **Cardápio digital:** adicional de R$ 49,90/mês com logo, cor, produtos, fotos (por link https), preços e link exclusivo `/m/<endereço>`.
   - **Conta e plano:** dados do estabelecimento, ponto de saída no mapa e mensalidade calculada pelo plano.
-- **Entregador** (`/entregador/<link>`): vê as entregas atribuídas, avança as etapas, abre Waze ou Google Maps e compartilha o GPS pelo navegador.
+- **Entregador** (`/entregador/<link>`): vê as entregas atribuídas, avança as etapas, abre Waze ou Google Maps, compartilha o GPS pelo navegador e vê um radar até o cliente.
 - **Cliente** (`/acompanhar/<link>`): status, mapa com o entregador, previsão de chegada (com Mapbox), aviso de "pronto para receber" e saldo de cashback.
-- **Demonstração** (`/demo`): continua com um pedido fictício salvo no navegador, para quem quer ver o fluxo sem criar conta.
+- **Código de entrega (Encontro):** quando o entregador marca a chegada ou está a até 300 m do destino, o cliente vê um radar de proximidade e um código de 4 dígitos. O entregador digita o código para concluir; depois de 5 erros ele fica bloqueado e o estabelecimento conclui pelo painel. O painel e o histórico mostram "Entrega verificada". O código é derivado do link do cliente com um segredo do servidor (`DELIVERY_CODE_SECRET`, opcional; sem ela usa `DATABASE_URL`), e as tentativas ficam em `delivery_updates`, então não há migração nova.
+- **Demonstração** (`/demo`): continua com um pedido fictício salvo no navegador, incluindo o código de entrega, para quem quer ver o fluxo sem criar conta.
 
 A cobrança da mensalidade ainda não é automática: o painel mostra o valor, e a cobrança é combinada fora do sistema.
 
@@ -49,6 +50,7 @@ Worker `pitou`, GitHub branch `main`. Configure em **Settings → Variables and 
 | Variável | Tipo | Necessidade |
 |---|---|---|
 | `DATABASE_URL` | Secret | Obrigatório: contas, pedidos, GPS, cashback e cardápio no Neon |
+| `DELIVERY_CODE_SECRET` | Secret | Opcional. Segredo para gerar os códigos de entrega. Trocar o valor muda os códigos das entregas em andamento |
 | `PITOU_SIGNUP_CODE` | Secret | Opcional. Se definido, o cadastro de novos estabelecimentos exige este código de convite |
 | `MAPBOX_ACCESS_TOKEN` | Secret | Opcional: rota, previsão de chegada e localização automática dos endereços |
 

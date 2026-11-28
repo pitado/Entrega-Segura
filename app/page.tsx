@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { ArrowRight, Check, Gift, Link2, MapPin, MessageCircle, Phone, Plus, Store } from "lucide-react";
+import { ArrowRight, Check, Gift, Link2, MapPin, MessageCircle, Phone, Plus, ShieldCheck } from "lucide-react";
+import Radar from "./components/Radar";
 import Art from "./components/Art";
 import PitouLogo from "./components/PitouLogo";
 import PriceSimulator from "./PriceSimulator";
@@ -30,6 +31,7 @@ const conditions = ["Sem fidelidade", "Cancele quando quiser", "Pague somente en
 const faq = [
   { q: "Preciso assinar contrato com fidelidade?", a: "Não. O Pitou é cobrado mês a mês e você pode cancelar quando quiser. Você paga somente enquanto utilizar." },
   { q: "O cliente precisa instalar algum aplicativo?", a: "Não. O cliente acompanha a entrega por um link que abre direto no navegador do celular." },
+  { q: "Como funciona o código de entrega?", a: "Quando o entregador chega, o cliente vê no celular um código de 4 dígitos. O entregador digita esse código para concluir a entrega, e o painel mostra que ela foi verificada." },
   { q: `E se eu tiver mais de ${pricing.includedCouriers} entregadores?`, a: `Cada entregador além dos ${pricing.includedCouriers} incluídos custa R$ ${money(pricing.extraCourier)} por mês.` },
   { q: "O Menu Digital é obrigatório?", a: `Não. É um adicional opcional de R$ ${money(pricing.menu)} por mês, para ter um cardápio online com a identidade do seu estabelecimento.` },
 ];
@@ -85,6 +87,7 @@ export default function Home() {
         <nav aria-label="Seções">
           <a href="#como-funciona">Como funciona</a>
           <a href="#recursos">Recursos</a>
+          <a href="#seguranca">Segurança</a>
           <a href="#precos">Preços</a>
           <a href="#perguntas">Perguntas</a>
         </nav>
@@ -113,7 +116,7 @@ export default function Home() {
           <svg className="lp-rings" viewBox="0 0 600 600" aria-hidden="true"><g fill="none" stroke="#0B1208" strokeOpacity=".09" strokeWidth="2"><circle cx="300" cy="380" r="120" /><circle cx="300" cy="380" r="220" /><circle cx="300" cy="380" r="320" /></g></svg>
           <Art name="moto" className="lp-hero-moto" />
           <CustomerPhone />
-          <div className="lp-float lp-float-a"><span className="lp-float-icon"><Store size={18} /></span><span><b>Pedido #1042 saiu</b><small>Lucas levou às 19:42</small></span></div>
+          <div className="lp-float lp-float-a"><span className="lp-float-icon"><ShieldCheck size={18} /></span><span><b>Entrega verificada</b><small>Código confirmado pelo cliente</small></span></div>
           <div className="lp-float lp-float-b"><Gift size={16} aria-hidden="true" /> + R$ 3,45 de cashback</div>
         </div>
       </section>
@@ -220,6 +223,37 @@ export default function Home() {
         </div>
       </section>
 
+      <section id="seguranca" className="lp-wrap lp-section">
+        <div className="lp-secure">
+          <div className="lp-secure-copy">
+            <h2>A entrega só termina com o código do cliente.</h2>
+            <p>Quando o entregador chega, o cliente vê um código no celular. Só com ele a entrega é concluída, sem depender de mensagem ou ligação.</p>
+            <ul className="lp-checks">
+              {["Cada pedido tem um código próprio de 4 dígitos", "O código aparece só na tela do cliente", "O entregador digita na hora de entregar, e o painel mostra a entrega verificada"].map(item => <li key={item}><Check size={16} aria-hidden="true" />{item}</li>)}
+            </ul>
+            <div className="lp-code" aria-label="Exemplo de código: 4 8 2 7">{["4", "8", "2", "7"].map((d, i) => <span key={i} aria-hidden="true">{d}</span>)}</div>
+            <p className="lp-secure-note"><ShieldCheck size={15} aria-hidden="true" /> O Pitou nunca pede esse código por mensagem ou ligação.</p>
+          </div>
+          <div className="lp-secure-phones" aria-hidden="true">
+            <div className="lp-phone lp-phone-compact">
+              <div className="lp-phone-top"><PitouLogo size={20} /><span className="lp-chip-dot">Pedido #1042</span></div>
+              <b className="lp-secure-title">Lucas chegou</b>
+              <small className="lp-secure-sub">Está a menos de 30 m de você.</small>
+              <Radar distance={20} dotLabel="Lucas" />
+              <div className="lp-secure-card"><small>Seu código de entrega</small><div className="lp-code lp-code-sm">{["4", "8", "2", "7"].map((d, i) => <span key={i}>{d}</span>)}</div></div>
+            </div>
+            <div className="lp-phone lp-phone-compact lp-secure-second">
+              <div className="lp-phone-top"><PitouLogo size={20} /><span className="lp-chip-dot">Ao vivo</span></div>
+              <div className="lp-progress"><span>No destino <em>#1042</em></span><small>Etapa 3 de 4</small></div>
+              <b className="lp-secure-title">Menos de 30 m</b>
+              <Radar distance={20} centerLabel="Ana" dotLabel="Você" />
+              <div className="lp-secure-card lp-secure-card-soft"><small>Código de entrega</small><div className="lp-code lp-code-sm lp-code-light">{["4", "8", "2", "7"].map((d, i) => <span key={i}>{d}</span>)}</div></div>
+              <div className="lp-phone-cta lp-phone-cta-center"><Check size={14} strokeWidth={3} /> Concluir entrega</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section id="precos" className="lp-wrap lp-section">
         <div className="lp-section-head">
           <h2>Um plano simples, sem surpresas</h2>
@@ -294,7 +328,7 @@ export default function Home() {
         <PitouLogo size={34} />
         <p>Gestão e acompanhamento de entregas para o seu estabelecimento.</p>
       </div>
-      <nav aria-label="Produto"><b>Produto</b><a href="#como-funciona">Como funciona</a><a href="#recursos">Recursos</a><a href="#precos">Preços</a></nav>
+      <nav aria-label="Produto"><b>Produto</b><a href="#como-funciona">Como funciona</a><a href="#recursos">Recursos</a><a href="#seguranca">Segurança</a><a href="#precos">Preços</a></nav>
       <nav aria-label="Conta"><b>Conta</b><a href="/entrar">Entrar</a><a href="/entrar?criar">Criar conta</a><a href="/demo">Demonstração</a></nav>
       <div className="lp-footer-bottom"><span>© {new Date().getFullYear()} Pitou</span><span>pitou.com.br</span></div>
     </footer>

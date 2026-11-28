@@ -321,3 +321,37 @@
   .lp-footer { grid-template-columns: 1fr 1fr; }
   .lp-footer-brand { grid-column: 1 / -1; }
 }
+
+/* Segurança: código de entrega (Encontro). */
+.lp-secure { display: grid; grid-template-columns: 1fr 1.05fr; gap: clamp(28px, 4vw, 56px); align-items: center; padding: clamp(28px, 4vw, 56px); border-radius: 40px; background: var(--lp-surface); border: 1px solid var(--lp-line); }
+.lp-secure-copy h2 { max-width: 15ch; }
+.lp-secure-copy > p { margin: 16px 0 22px; color: var(--lp-text-2); font-size: clamp(16px, 1.4vw, 18px); }
+.lp-secure-copy .lp-checks { font-size: 15px; color: var(--lp-text-2); }
+.lp-secure-copy .lp-checks svg { flex: none; width: 22px; height: 22px; padding: 3px; border-radius: 50%; background: var(--lp-lime); color: var(--lp-ink); }
+.lp-code { display: flex; gap: 10px; margin-top: 26px; }
+.lp-code span { width: 64px; height: 72px; display: grid; place-items: center; border-radius: 20px; background: var(--lp-lime); color: var(--lp-ink); font-family: var(--p-display); font-size: 38px; font-weight: 700; }
+.lp-secure-copy > .lp-secure-note { display: flex; align-items: center; gap: 8px; margin-top: 16px; color: var(--lp-text-3); font-size: 13px; }
+.lp-secure-note svg { color: var(--lp-lime); }
+.lp-secure-phones { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
+.lp-secure-second { margin-top: 48px; }
+.lp-secure-title { font-family: var(--p-display); font-size: 20px; letter-spacing: -.04em; padding: 2px 4px 0; }
+.lp-secure-sub { color: var(--lp-text-3); padding: 0 4px; margin-top: -6px; }
+.lp-secure-phones .pt-radar { width: 100%; height: auto; }
+.lp-secure-card { display: grid; gap: 6px; padding: 10px; border-radius: 18px; background: var(--lp-lime); color: var(--lp-ink); font-weight: 700; }
+.lp-secure-card-soft { background: var(--lp-soft); }
+.lp-code-sm { margin: 0; gap: 6px; }
+.lp-code-sm span { flex: 1; width: auto; height: 38px; border-radius: 11px; font-size: 20px; background: var(--lp-ink); color: var(--lp-lime); }
+.lp-code-light span { background: var(--lp-lime); color: var(--lp-ink); border: 2px solid var(--lp-ink); }
+@media (max-width: 1080px) { .lp-secure { grid-template-columns: 1fr; } }
+@media (max-width: 720px) {
+  .lp-secure { padding: 24px 18px; border-radius: 30px; }
+  .lp-code span { width: 56px; height: 64px; font-size: 32px; }
+  .lp-secure-phones { gap: 10px; }
+  .lp-secure-second { margin-top: 28px; }
+}
+.lp-secure > *, .lp-secure-phones > * { min-width: 0; }
+@media (max-width: 720px) {
+  .lp-secure-phones { grid-template-columns: 1fr; }
+  .lp-secure-phones > .lp-phone { width: min(300px, 100%); margin: 0 auto; }
+  .lp-secure-second { display: none !important; }
+}
