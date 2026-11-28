@@ -80,6 +80,15 @@ await step("Fim do teste bloqueia painel e cardápio, mas não a tela de assinat
   assert.equal(b.data.paymentsConfigured, true);
   assert.equal(b.data.plan.monthly, 348.9);
 });
+await step("Erro do Mercado Pago aparece em português, sem liberar nada", async () => {
+  // O servidor falso recusa e-mails @gmail.com como o Mercado Pago faz com conta real em credenciais de teste.
+  const r = await owner("/api/painel/billing/subscribe", { body: { payer_email: "pessoa@gmail.com" } });
+  assert.equal(r.status, 502);
+  assert.match(r.data.error, /modo de teste/);
+  assert.doesNotMatch(r.data.error, /payer|collector/i);
+  assert.equal((await owner("/api/painel/billing")).data.paymentsMode, "test");
+  assert.equal((await owner("/api/painel")).status, 402);
+});
 await step("Assinar cria a assinatura no Mercado Pago com o valor certo e não libera antes do pagamento", async () => {
   const r = await owner("/api/painel/billing/subscribe", { body: { payer_email: "Pagador@Teste.com", extra_couriers: 2, menu_enabled: true } });
   assert.equal(r.status, 201, JSON.stringify(r.data));

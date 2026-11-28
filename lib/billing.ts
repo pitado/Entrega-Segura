@@ -66,6 +66,26 @@ export class MercadoPagoError extends Error {
   constructor(message: string, public status: number, public detail?: unknown) { super(message); }
 }
 export const mercadoPagoConfigured = () => Boolean(process.env.MERCADOPAGO_ACCESS_TOKEN);
+/** "test" com credenciais de teste (TEST-...): só usuários de teste do Mercado Pago conseguem pagar. */
+export const mercadoPagoMode = (): "test" | "live" | null => {
+  const t = process.env.MERCADOPAGO_ACCESS_TOKEN || "";
+  return !t ? null : t.startsWith("TEST-") ? "test" : "live";
+};
+
+/** Traduz os erros do Mercado Pago para uma mensagem que o estabelecimento entende. */
+export function friendlyMercadoPagoError(err: MercadoPagoError): string {
+  const m = `${err.message} ${JSON.stringify(err.detail ?? "")}`.toLowerCase();
+  if (err.status === 503) return err.message;
+  if (err.status === 401 || err.status === 403 && m.includes("token")) return "A configuração de pagamento do Pitou está inválida. Fale com a equipe Pitou.";
+  if (m.includes("real or test users")) return mercadoPagoMode() === "test"
+    ? "O pagamento está em modo de teste: só um comprador de teste do Mercado Pago consegue assinar agora. Use o e-mail de um usuário de teste."
+    : "Esse e-mail é de um usuário de teste do Mercado Pago. Use o e-mail da sua conta real.";
+  if (m.includes("same user") || m.includes("collector") && m.includes("payer") && m.includes("same")) return "Esse e-mail é da conta que recebe os pagamentos do Pitou. Use o e-mail de outra conta Mercado Pago.";
+  if (m.includes("countr")) return "A conta Mercado Pago precisa ser do Brasil.";
+  if (m.includes("payer_email") || m.includes("email")) return "O Mercado Pago não aceitou esse e-mail. Confira se é o e-mail da sua conta Mercado Pago.";
+  if (err.status >= 500) return "O Mercado Pago está instável agora. Tente de novo em alguns minutos.";
+  return "O Mercado Pago recusou a assinatura. Confira o e-mail e tente novamente.";
+}
 
 async function mp<T = Record<string, unknown>>(path: string, init: { method?: string; body?: unknown; idempotencyKey?: string } = {}): Promise<T> {
   const token = process.env.MERCADOPAGO_ACCESS_TOKEN;

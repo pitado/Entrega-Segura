@@ -1,7 +1,7 @@
 import { db } from "../../../../../lib/db";
 import { fail, ok, readJson, text } from "../../../../../lib/http";
 import { withAccount } from "../../../../../lib/panel";
-import { createPreapproval, MercadoPagoError, monthlyAmount, publicBase } from "../../../../../lib/billing";
+import { createPreapproval, friendlyMercadoPagoError, MercadoPagoError, monthlyAmount, publicBase } from "../../../../../lib/billing";
 import { pricing } from "../../../../pricing";
 
 export const runtime = "nodejs";
@@ -43,7 +43,7 @@ export async function POST(req: Request) {
       await sql.query("INSERT INTO billing_events(establishment_id,topic,resource_id,status) VALUES($1,'created',$2,$3)", [establishment.id, pre.id, pre.status || "pending"]);
       return ok({ init_point: pre.init_point, amount }, 201);
     } catch (err) {
-      if (err instanceof MercadoPagoError) return fail(err.status === 503 ? err.message : `Mercado Pago: ${err.message}`, err.status === 503 ? 503 : 502);
+      if (err instanceof MercadoPagoError) return fail(friendlyMercadoPagoError(err), err.status === 503 ? 503 : 502);
       throw err;
     }
   }, { allowUnpaid: true });
