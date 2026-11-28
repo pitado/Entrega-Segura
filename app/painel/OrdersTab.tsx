@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { Check, Copy, MessageCircle, Plus, X } from "lucide-react";
+import { Check, Copy, MessageCircle, Plus, ShieldCheck, X } from "lucide-react";
 import LiveMap from "../components/LiveMap";
 import { actorLabel, api, brl, phone, statusLabel, time, toPoint, whatsappUrl } from "../components/client";
 import type { Order, Overview } from "./types";
@@ -58,14 +58,14 @@ function OrderItem({ order: o, current, onClick }: { order: Order; current: bool
   return <button className="pt-order-item" aria-current={current} onClick={onClick}>
     <div className="pt-between">
       <span className="pt-order-title">{o.number ? `#${o.number} · ` : ""}{o.customer_name}</span>
-      <span className={"pt-badge " + o.status}>{statusLabel[o.status]}</span>
+      <span className={"pt-badge " + o.status}>{o.status === "delivered" && o.code_verified && <ShieldCheck size={13} aria-label="Verificada com código" />}{statusLabel[o.status]}</span>
     </div>
     <span className="pt-order-address">{o.destination}</span>
     <span className="pt-row pt-small pt-muted">
       <span>{time(o.created_at)}</span>
       <span>{o.courier_name ? "· " + o.courier_name : "· sem entregador"}</span>
       {o.total_amount != null && <span>· {brl(o.total_amount)}</span>}
-      {o.customer_ready && active(o) && <span style={{ color: "var(--green-strong)", fontWeight: 700 }}>· cliente pronto</span>}
+      {o.customer_ready && active(o) && <span style={{ color: "var(--lime)", fontWeight: 700 }}>· cliente pronto</span>}
     </span>
   </button>;
 }
@@ -112,6 +112,13 @@ function OrderDetail({ order: o, data, refresh }: { order: Order; data: Overview
         {!destination && " O cliente ainda não confirmou a localização no link, então a previsão de chegada pode não aparecer."}
       </p>}
       {o.customer_ready && isActive && <p className="pt-success">O cliente avisou que está pronto para receber.</p>}
+      {(o.status === "on_route" || o.status === "arrived") && <div className="pt-code-note">
+        <span className="pt-code-icon"><ShieldCheck size={18} aria-hidden="true" /></span>
+        <span><b>Entrega com código</b><small>O cliente diz 4 dígitos ao entregador, que digita o código para concluir. Você vê aqui quando for confirmado.</small></span>
+      </div>}
+      {o.status === "delivered" && (o.code_verified
+        ? <div className="pt-code-note pt-code-ok"><span className="pt-code-icon"><ShieldCheck size={18} aria-hidden="true" /></span><span><b>Entrega verificada</b><small>Código confirmado pelo cliente na hora da entrega.</small></span></div>
+        : <p className="pt-notice">Concluída sem o código de entrega.</p>)}
       <dl className="pt-kv">
         <dt>Endereço</dt><dd>{o.destination}</dd>
         {o.customer_phone && <><dt>Telefone</dt><dd><a href={"tel:" + o.customer_phone}>{phone(o.customer_phone)}</a></dd></>}

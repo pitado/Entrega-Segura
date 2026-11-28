@@ -121,8 +121,44 @@ await step("Cliente acompanha com GPS e avisa que está pronto", async () => {
   assert.equal(o.customer_ready, true);
   assert.equal(o.latitude, -23.4215);
 });
+let deliveryCode = "";
+await step("Código de entrega só aparece na chegada e só para o cliente", async () => {
+  const before = await anon(`/api/tracking/${trackingToken}`);
+  assert.equal(before.data.order.delivery_code, null, "sem destino conhecido, o código espera a chegada");
+  const c = await anon(`/api/courier/${courierToken}`);
+  assert.equal(Object.hasOwn(c.data.orders[0], "delivery_code"), false, "o entregador nunca recebe o código");
+  assert.equal(Object.hasOwn(c.data.orders[0], "tracking_token"), false);
+  assert.equal(c.data.orders[0].code_attempts_left, 5);
+  // Cliente confirma a localização a uns 100 m do entregador: o código é liberado pela proximidade.
+  assert.equal((await anon(`/api/tracking/${trackingToken}`, { body: { action: "destination", latitude: -23.4224, longitude: -51.9301 } })).status, 200);
+  const near = await anon(`/api/tracking/${trackingToken}`);
+  assert.ok(near.data.order.distance_m > 50 && near.data.order.distance_m < 150, "distância " + near.data.order.distance_m);
+  assert.match(near.data.order.delivery_code, /^\d{4}$/);
+  assert.equal((await anon(`/api/courier/${courierToken}`, { body: { action: "status", order_id: orderId, status: "arrived" } })).status, 200);
+  const t = await anon(`/api/tracking/${trackingToken}`);
+  assert.equal(t.data.order.delivery_code, near.data.order.delivery_code, "o código não muda");
+  assert.equal(t.data.order.code_verified, false);
+  deliveryCode = t.data.order.delivery_code;
+});
+await step("Entregador precisa do código certo para concluir", async () => {
+  const noCode = await anon(`/api/courier/${courierToken}`, { body: { action: "status", order_id: orderId, status: "delivered" } });
+  assert.equal(noCode.status, 422, JSON.stringify(noCode.data));
+  const wrong = String((Number(deliveryCode) + 1) % 10000).padStart(4, "0");
+  const bad = await anon(`/api/courier/${courierToken}`, { body: { action: "status", order_id: orderId, status: "delivered", code: wrong } });
+  assert.equal(bad.status, 422);
+  assert.match(bad.data.error, /3 tentativas/);
+  const c = await anon(`/api/courier/${courierToken}`);
+  assert.equal(c.data.orders[0].code_attempts_left, 3);
+});
 await step("Entrega concluída credita 10% de cashback", async () => {
-  assert.equal((await anon(`/api/courier/${courierToken}`, { body: { action: "status", order_id: orderId, status: "delivered" } })).status, 200);
+  const done = await anon(`/api/courier/${courierToken}`, { body: { action: "status", order_id: orderId, status: "delivered", code: deliveryCode } });
+  assert.equal(done.status, 200, JSON.stringify(done.data));
+  assert.equal(done.data.verified, true);
+  const p = await owner("/api/painel");
+  assert.equal(p.data.orders.find(x => x.id === orderId).code_verified, true, "painel mostra entrega verificada");
+  const v = await anon(`/api/tracking/${trackingToken}`);
+  assert.equal(v.data.order.code_verified, true);
+  assert.equal(v.data.updates.some(u => u.status === "code_failed"), false, "tentativas erradas não aparecem para o cliente");
   const t = await anon(`/api/tracking/${trackingToken}`);
   assert.equal(t.data.order.status, "delivered");
   assert.equal(t.data.order.cashback_earned, 8);
@@ -162,6 +198,17 @@ await step("Histórico com totais e filtros", async () => {
   assert.equal((await owner("/api/painel/history?q=2")).data.orders.length >= 1, true);
   const c = await owner("/api/painel/customers");
   assert.equal(c.data.totals.earned, 8);
+});
+await step("Código errado 5 vezes bloqueia o entregador e o estabelecimento conclui", async () => {
+  const r = await owner("/api/painel/orders", { body: { customer_name: "Dora Bloqueio", destination: "Rua do Teste, 77", courier_id: couriers.find(c => c.name === "Entregador 1").id } });
+  assert.equal(r.status, 201, JSON.stringify(r.data));
+  const id = r.data.id || r.data.order?.id;
+  assert.equal((await anon(`/api/courier/${courierToken}`, { body: { action: "status", order_id: id, status: "on_route" } })).status, 200);
+  for (let i = 0; i < 5; i++) assert.equal((await anon(`/api/courier/${courierToken}`, { body: { action: "status", order_id: id, status: "delivered", code: "abcd" } })).status, 422);
+  assert.equal((await anon(`/api/courier/${courierToken}`, { body: { action: "status", order_id: id, status: "delivered", code: "0000" } })).status, 429);
+  assert.equal((await owner(`/api/painel/orders/${id}`, { method: "PATCH", body: { action: "status", status: "delivered" } })).status, 200);
+  const p = await owner("/api/painel");
+  assert.equal(p.data.orders.find(x => x.id === id).code_verified, false, "concluída pelo estabelecimento, sem código");
 });
 await step("Link do entregador revogado deixa de funcionar", async () => {
   const id = couriers.find(c => c.name === "Entregador 1").id;

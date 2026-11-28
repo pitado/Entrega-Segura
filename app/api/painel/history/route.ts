@@ -37,7 +37,8 @@ export async function GET(req: Request) {
     const [rows, totals] = await Promise.all([
       sql.query(`SELECT o.id,o.number,o.customer_name,o.customer_phone,o.destination,o.status,o.created_at,o.delivered_at,o.cancelled_at,
           c.name AS courier_name,o.total_amount::float8 AS total_amount,o.cashback_used::float8 AS cashback_used,o.cashback_earned::float8 AS cashback_earned,
-          CASE WHEN o.delivered_at IS NOT NULL THEN round(extract(epoch FROM o.delivered_at-o.created_at)/60)::int END AS minutes
+          CASE WHEN o.delivered_at IS NOT NULL THEN round(extract(epoch FROM o.delivered_at-o.created_at)/60)::int END AS minutes,
+          EXISTS(SELECT 1 FROM delivery_updates du WHERE du.order_id=o.id AND du.status='code_verified') AS code_verified
         FROM orders o LEFT JOIN couriers c ON c.id=o.courier_id WHERE ${filter}
         ORDER BY o.created_at DESC LIMIT 50 OFFSET ${page * 50}`, args),
       sql.query(`SELECT count(*)::int AS total,count(*) FILTER (WHERE o.status='delivered')::int AS delivered,

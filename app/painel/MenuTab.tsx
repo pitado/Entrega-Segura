@@ -100,7 +100,7 @@ function ProductForm({ product, categories, onDone, onDelete }: { product: Produ
       onDone();
     } catch (err) { setError((err as Error).message); setBusy(false); }
   }
-  return <form className="pt-stack" onSubmit={submit} style={{ background: "#f6f7fc", borderRadius: 16, padding: 16 }} key={product?.id || "new"}>
+  return <form className="pt-stack" onSubmit={submit} style={{ background: "var(--surface-2)", borderRadius: 20, padding: 16, border: "1px solid var(--line)" }} key={product?.id || "new"}>
     <h3>{product ? "Editar produto" : "Novo produto"}</h3>
     <div className="pt-form-grid">
       <label className="pt-field"><span>Nome</span><input name="name" required minLength={2} maxLength={90} defaultValue={product?.name} /></label>

@@ -1,8 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Gift, LocateFixed, MenuSquare, Phone } from "lucide-react";
+import { Gift, LocateFixed, Lock, MenuSquare, Phone, ShieldCheck } from "lucide-react";
 import LiveMap from "../../components/LiveMap";
+import Art from "../../components/Art";
+import Radar, { bearingDeg, distanceText } from "../../components/Radar";
 import PitouLogo from "../../components/PitouLogo";
 import { api, brl, phone, statusLabel, time, toPoint } from "../../components/client";
 
@@ -13,6 +15,7 @@ type Order = {
   courier_name: string | null; establishment_name: string; logo_url: string | null; establishment_phone: string | null;
   slug: string | null; menu_enabled: boolean; cashback_percent: number; establishment_latitude: number | null; establishment_longitude: number | null;
   cashback_balance: number | null; latitude: number | null; longitude: number | null; recorded_at: string | null;
+  distance_m: number | null; delivery_code: string | null; code_verified: boolean;
 };
 type Update = { status: string; created_at: string };
 const steps = ["preparing", "on_route", "arrived", "delivered"] as const;
@@ -73,6 +76,8 @@ export default function Tracking({ token }: { token: string }) {
   const store = toPoint(order.establishment_latitude, order.establishment_longitude);
   const active = order.status === "preparing" || order.status === "on_route" || order.status === "arrived";
   const stepIndex = steps.indexOf(order.status as (typeof steps)[number]);
+  const courierName = order.courier_name || "O entregador";
+  const encontro = Boolean(order.delivery_code) && (order.status === "on_route" || order.status === "arrived");
   const potential = order.total_amount != null && order.cashback_percent > 0 ? Math.round((order.total_amount - order.cashback_used) * order.cashback_percent) / 100 : 0;
 
   return <main className="pt"><div className="pt-narrow">
@@ -82,17 +87,44 @@ export default function Tracking({ token }: { token: string }) {
       {order.establishment_phone && <a className="pt-icon-btn" href={"tel:" + order.establishment_phone} aria-label={"Ligar para " + phone(order.establishment_phone)}><Phone size={18} /></a>}
     </div>
 
-    <div className="pt-card pt-stack">
+    {encontro ? <section className="pt-stack pt-encontro" aria-label="Encontro com o entregador">
+      <div>
+        <h1>{order.status === "arrived" ? `${courierName} chegou` : `${courierName} está chegando`}</h1>
+        <p>{order.distance_m != null ? `Está a ${distanceText(order.distance_m)} de você.` : "Está no endereço de entrega."}</p>
+      </div>
+      <Radar distance={order.distance_m} dotLabel={courierName} bearing={courier && destination ? bearingDeg(destination, courier) : undefined} />
+      <div className="pt-code-card">
+        <h2>Seu código de entrega</h2>
+        <span className="pt-code-chip"><ShieldCheck size={15} aria-hidden="true" /> Só para o entregador</span>
+        <div className="pt-code-digits" aria-label={"Código " + order.delivery_code!.split("").join(" ")}>
+          {order.delivery_code!.split("").map((d, i) => <span key={i} aria-hidden="true">{d}</span>)}
+        </div>
+        <p>Diga o código só quando {courierName === "O entregador" ? "o entregador" : courierName} estiver na sua frente.</p>
+        <small>O Pitou nunca pede esse código por mensagem ou ligação.</small>
+      </div>
+    </section> : <>
+    <div className={"pt-hero-card" + (order.status === "preparing" ? " pt-hero-yellow" : order.status === "delivered" || order.status === "cancelled" ? " pt-hero-soft" : "")}>
+      <span className="pt-hero-kicker">{statusLabel[order.status] || "Pedido"}</span>
       <h1>{headline[order.status]}</h1>
-      {order.status !== "cancelled" && <div className="pt-steps" aria-label="Etapas da entrega">
-        {steps.map((s, i) => <div key={s} className={"pt-step" + (i <= stepIndex ? " done" : "")}><i />{statusLabel[s]}</div>)}
-      </div>}
-      {order.courier_name && active && order.status !== "preparing" && <p className="pt-muted">{order.courier_name} está levando o seu pedido.</p>}
-      {order.status === "delivered" && order.delivered_at && <p className="pt-muted">Entregue às {time(order.delivered_at)}. Bom apetite!</p>}
+      {order.courier_name && active && order.status !== "preparing" && <p>{order.courier_name} está levando o seu pedido.</p>}
+      {order.status === "delivered" && order.delivered_at && <p>Entregue às {time(order.delivered_at)}. Bom apetite!</p>}
+      <Art name={order.status === "delivered" || order.status === "preparing" ? "box" : "moto"} label={false} />
     </div>
+    {order.status !== "cancelled" && <div className="pt-card"><div className="pt-steps" aria-label="Etapas da entrega">
+      {steps.map((s, i) => <div key={s} className={"pt-step" + (i <= stepIndex ? " done" : "")}><i />{statusLabel[s]}</div>)}
+    </div></div>}
 
+    {order.status === "on_route" && <div className="pt-code-locked">
+      <span className="pt-code-icon"><Lock size={17} aria-hidden="true" /></span>
+      <span><b>Código de entrega</b><small>Liberado na chegada. Você diz o código ao entregador para receber.</small></span>
+    </div>}
+    {order.status === "delivered" && order.code_verified && <div className="pt-code-note pt-code-ok">
+      <span className="pt-code-icon"><ShieldCheck size={18} aria-hidden="true" /></span>
+      <span><b>Entrega verificada</b><small>Você confirmou o recebimento com o seu código.</small></span>
+    </div>}
     {active && order.status !== "preparing" && <LiveMap courier={courier} destination={destination} routeToken={token}
       emptyText="Assim que o GPS do entregador estiver ativo, ele aparece aqui." />}
+    </>}
     {active && order.status === "preparing" && store && <LiveMap store={store} destination={destination} height={220} />}
 
     {active && <div className="pt-card pt-stack">
@@ -124,6 +156,6 @@ export default function Tracking({ token }: { token: string }) {
         {updates.map((u, i) => <li key={i}><time>{time(u.created_at)}</time><span>{statusLabel[u.status] || u.status}</span></li>)}
       </ol>
     </details>}
-    <p className="pt-footer-note">Entrega acompanhada por <a href="/" aria-label="Pitou"><span className="pitou-logo"><span className="pitou-wordmark">pitou</span></span></a></p>
+    <p className="pt-footer-note">Entrega acompanhada por <a href="/" aria-label="Pitou"><PitouLogo size={18} /></a></p>
   </div></main>;
 }

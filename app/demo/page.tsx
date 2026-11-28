@@ -2,13 +2,15 @@
 
 import { useEffect, useRef, useState, type CSSProperties, type FormEvent, type PointerEvent, type ReactNode } from "react";
 import {
-  ArrowRight, Bike, Check, ChefHat, Clipboard, Gift, MapPin, Navigation,
-  Minus, Package, Pause, Play, Plus, RefreshCw, Route, Search, Truck, UserRound, Warehouse,
+  ArrowRight, Bike, Check, ChefHat, Clipboard, Gift, Lock, MapPin, Navigation,
+  Package, Pause, Play, RefreshCw, Search, ShieldCheck, Truck, UserRound, Warehouse,
 } from "lucide-react";
 import { wazeDirectionsUrl } from "../../lib/navigation";
 import "./demo.css";
 import DeliveryTrackingMap from "./DeliveryTrackingMap";
 import { PitouMark } from "../components/PitouLogo";
+import Art from "../components/Art";
+import Radar, { distanceText } from "../components/Radar";
 import { pricing } from "../pricing";
 
 const statuses = {
@@ -29,6 +31,10 @@ type Order = {
   sharing: boolean;
   step: number;
   updatedAt: string;
+  /** Código de entrega do Encontro: só o cliente vê; o entregador digita para concluir. */
+  code: string;
+  verified: boolean;
+  failed: number;
 };
 type Demo = { orders: Order[]; selected: number };
 
@@ -65,11 +71,31 @@ const schematic = [[22, 76], [29, 72], [34, 68], [42, 68], [49, 67], [51, 59],
   [53, 49], [62, 48], [65, 46], [67, 38], [76, 37], [84, 28]];
 const lastStep = schematic.length - 1;
 const destination = { lat: -23.42018, lng: -51.92776 };
+const maxCodeAttempts = 5;
+const releaseMeters = 300;
+
+function randomCode() {
+  const n = typeof crypto !== "undefined" && crypto.getRandomValues ? crypto.getRandomValues(new Uint32Array(1))[0] : Math.floor(Math.random() * 1e9);
+  return String(n % 10000).padStart(4, "0");
+}
+
+/** Distância simulada entre o entregador e o cliente, a partir do ponto do trajeto ilustrado. */
+function demoDistance(order: Order): number | null {
+  if (order.status === "arrived") return 18;
+  if (order.status !== "on_route") return null;
+  return Math.max(40, (lastStep - order.step) * 130);
+}
+
+function codeReleased(order: Order) {
+  const d = demoDistance(order);
+  return d != null && d <= releaseMeters;
+}
 
 function newOrder(id: number, customer: string, courier: string, status: Status = "preparing", region = "Região central, Maringá"): Order {
   return {
     id, customer, courier, status, destination: region, ready: false, sharing: false,
     step: status === "delivered" || status === "arrived" ? lastStep : 0, updatedAt: "",
+    code: randomCode(), verified: status === "delivered", failed: 0,
   };
 }
 
@@ -95,6 +121,9 @@ function readOrder(input: Partial<Order>, fallback: Order): Order {
     sharing: Boolean(input.sharing),
     step: Math.max(0, Math.min(lastStep, Math.trunc(Number(input.step) || 0))),
     updatedAt: typeof input.updatedAt === "string" && Number.isFinite(Date.parse(input.updatedAt)) ? input.updatedAt : "",
+    code: typeof input.code === "string" && /^\d{4}$/.test(input.code) ? input.code : fallback.code,
+    verified: typeof input.verified === "boolean" ? input.verified : fallback.verified,
+    failed: Math.max(0, Math.min(maxCodeAttempts, Math.trunc(Number(input.failed) || 0))),
   };
 }
 
@@ -124,9 +153,72 @@ function Pill({ children, onClick, secondary = false, disabled = false }: {
     onClick={onClick} disabled={disabled}>{children}</button>;
 }
 
-function StatusBadge({ status, withIcon = false }: { status: Status; withIcon?: boolean }) {
+function StatusBadge({ status, withIcon = false, verified = false }: { status: Status; withIcon?: boolean; verified?: boolean }) {
   const { icon: Icon, label } = statuses[status];
-  return <span className={`trip-status trip-${status}`}>{withIcon && <Icon size={23} aria-hidden="true" />}{label}</span>;
+  const showShield = verified && status === "delivered";
+  return <span className={`trip-status trip-${status}`} title={showShield ? "Entrega verificada com código" : undefined}>
+    {showShield ? <ShieldCheck size={withIcon ? 23 : 16} aria-hidden="true" /> : withIcon && <Icon size={23} aria-hidden="true" />}{label}
+  </span>;
+}
+
+/** Tela do cliente na chegada: radar de proximidade e o código que só ele vê. */
+function CustomerEncontro({ order }: { order: Order }) {
+  const d = demoDistance(order);
+  return <section className="trip-paper trip-encontro" aria-label="Encontro com o entregador">
+    <div className="trip-encontro-head"><b>{order.status === "arrived" ? `${order.courier} chegou` : `${order.courier} está chegando`}</b>
+      <span>· Pedido #{order.id}</span></div>
+    <p className="trip-encontro-distance">{d != null && d < 30 ? "Menos de 30 m" : `A ${distanceText(d)} de você`}</p>
+    <div className="trip-encontro-grid">
+      <div className="trip-radar-box"><Radar distance={d} dotLabel={order.courier} /></div>
+      <div className="trip-code">
+        <h3>Seu código de entrega</h3>
+        <span className="trip-code-chip"><ShieldCheck size={15} aria-hidden="true" /> Só para o entregador</span>
+        <div className="trip-code-digits" aria-label={`Código ${order.code.split("").join(" ")}`}>
+          {order.code.split("").map((digit, i) => <span key={i} aria-hidden="true">{digit}</span>)}
+        </div>
+        <p><b>Diga o código só quando {order.courier} estiver na sua frente.</b></p>
+        <p className="trip-code-note">O Pitou nunca pede esse código por mensagem ou ligação.</p>
+      </div>
+    </div>
+  </section>;
+}
+
+/** Tela do entregador: radar até o cliente e campo para digitar o código. */
+function CourierEncontro({ order, onDeliver, onFail }: { order: Order; onDeliver: () => void; onFail: () => void }) {
+  const [code, setCode] = useState("");
+  const [error, setError] = useState("");
+  const d = demoDistance(order);
+  const left = maxCodeAttempts - order.failed;
+  const step = order.status === "arrived" ? 3 : 2;
+  function submit() {
+    if (code.length !== 4) return;
+    if (code === order.code) { setError(""); onDeliver(); return; }
+    onFail();
+    setCode("");
+    const rest = left - 1;
+    setError(rest > 0 ? `Código incorreto. Confira com o cliente (${rest} tentativa${rest === 1 ? "" : "s"} restante${rest === 1 ? "" : "s"}).` : "");
+  }
+  return <section className="trip-paper trip-encontro" aria-label="Encontro com o cliente">
+    <div className="trip-encontro-head"><b>{order.status === "arrived" ? "No destino" : "Em rota"}</b><span>#{order.id} · Etapa {step} de 4</span></div>
+    <p className="trip-encontro-distance">{d != null && d < 30 ? "Menos de 30 m" : distanceText(d).replace(/^m/, "M")}</p>
+    <div className="trip-encontro-grid">
+      <div className="trip-radar-box"><Radar distance={d} centerLabel={order.customer.split(" ")[0]} dotLabel="Você" /></div>
+      <div className="trip-code trip-code-soft">
+        <h3>Código de entrega</h3>
+        {left <= 0 ? <p><Lock size={16} aria-hidden="true" /> <b>Muitas tentativas com o código errado.</b> Peça ao estabelecimento para concluir a entrega.</p> : <>
+          <label className="trip-code-digits">
+            {[0, 1, 2, 3].map(i => <span key={i} aria-hidden="true" data-filled={code[i] ? "" : undefined} data-cursor={i === Math.min(code.length, 3) ? "" : undefined}>{code[i] ?? ""}</span>)}
+            <input value={code} inputMode="numeric" autoComplete="one-time-code" maxLength={4} aria-label="Código de entrega de 4 dígitos"
+              onChange={event => { setCode(event.target.value.replace(/\D/g, "").slice(0, 4)); setError(""); }}
+              onKeyDown={event => { if (event.key === "Enter") submit(); }} />
+          </label>
+          {error ? <p className="trip-code-error" role="alert">{error}</p> : <p>Peça o código ao cliente, pessoalmente.</p>}
+          <p className="trip-code-note">Na demonstração, o código aparece na aba Cliente.</p>
+          <button type="button" className="trip-pill trip-code-submit" disabled={code.length !== 4} onClick={submit}><Check size={20} /> Concluir entrega</button>
+        </>}
+      </div>
+    </div>
+  </section>;
 }
 
 function Timeline({ status, title = false }: { status: Status; title?: boolean }) {
@@ -496,7 +588,7 @@ export default function DemoPage() {
   return <div className="trip">
     <header className="trip-header">
       <div className="trip-header-inner">
-        <a className="trip-brand" href="/" aria-label="Pitou, página inicial"><PitouMark size={60} /><span className="trip-brand-name">pitou</span></a>
+        <a className="trip-brand" href="/" aria-label="Pitou, página inicial"><PitouMark size={60} /><span className="trip-brand-name">Pitou</span></a>
         <ProfileNavigation view={view} onChange={switchView} />
       </div>
     </header>
@@ -520,7 +612,7 @@ export default function DemoPage() {
               <p>Acompanhe o preparo, a coleta e a rota das suas entregas.</p>
               <Pill onClick={() => showFilter("active")}>Ver detalhes <ArrowRight size={21} /></Pill>
             </div>
-            <img className="trip-art" src="/redesign/packing.webp" alt="" />
+            <Art name="box" className="trip-art trip-art-box" label={false} />
           </section>
           <div className="trip-summary">
             {(["preparing", "on_route"] as const).map(status => {
@@ -572,7 +664,7 @@ export default function DemoPage() {
               <strong>#{item.id}</strong>
               <span className="trip-order-person"><UserRound size={21} aria-hidden="true" /><strong>{item.customer}</strong></span>
               <span className="trip-order-person trip-order-courier"><Bike size={20} aria-hidden="true" />{item.courier}</span>
-              <span className="trip-order-status"><StatusBadge status={item.status} /></span>
+              <span className="trip-order-status"><StatusBadge status={item.status} verified={item.verified} /></span>
               <span className="trip-order-region"><MapPin size={21} aria-hidden="true" />{item.destination}</span>
               <span className="trip-order-arrow"><ArrowRight size={18} aria-hidden="true" /></span>
             </button></li>)}
@@ -580,13 +672,16 @@ export default function DemoPage() {
           {matches.length === 0 && <p className="trip-empty" role="status">Nenhum pedido encontrado.</p>}
         </section>
       </>}
+      {view === "courier" && (order.status === "on_route" || order.status === "arrived") &&
+        <CourierEncontro key={order.id} order={order} onDeliver={() => { move({ status: "delivered", sharing: false, verified: true }); setFeedback("Código confirmado. Entrega verificada!"); }}
+          onFail={() => move({ failed: order.failed + 1 })} />}
       {view === "courier" && <div className="trip-courier-grid">
         <section className="trip-hero trip-courier-hero"><div className="trip-hero-copy">
           <StatusBadge status={order.status} withIcon />
           <p className="trip-order-number">Pedido #{order.id}</p>
           <h2>{order.customer}</h2>
           <p className="trip-address"><MapPin size={22} aria-hidden="true" /> {order.destination}</p>
-        </div><img className="trip-art" src="/redesign/courier.webp" alt="" /></section>
+        </div><Art name="moto" className="trip-art trip-art-box" label={false} /></section>
         <section className="trip-paper trip-next">
           <h2>Próxima etapa</h2>
           <div className="trip-next-actions">
@@ -594,9 +689,8 @@ export default function DemoPage() {
               Iniciar viagem simulada <ArrowRight size={22} /></Pill>}
             {order.status === "on_route" && <Pill onClick={() => move({ status: "arrived", sharing: false, step: lastStep })}>
               Cheguei ao destino <ArrowRight size={22} /></Pill>}
-            {order.status === "arrived" && <Pill onClick={() => move({ status: "delivered", sharing: false })}>
-              Confirmar entrega concluída <Check size={20} /></Pill>}
-            {order.status === "delivered" && <strong className="trip-complete"><Check size={22} /> Entrega concluída</strong>}
+            {order.status === "arrived" && <strong className="trip-waiting"><Lock size={20} /> Digite o código do cliente para concluir</strong>}
+            {order.status === "delivered" && <strong className="trip-complete">{order.verified ? <ShieldCheck size={22} /> : <Check size={22} />} {order.verified ? "Entrega verificada" : "Entrega concluída"}</strong>}
             <span className={order.ready ? "trip-ready" : "trip-waiting"}>{order.ready ? <Check size={20} /> : <UserRound size={20} />}
               {order.ready ? "Cliente pronto para receber" : "Aguardando confirmação do cliente"}</span>
           </div>
@@ -611,6 +705,9 @@ export default function DemoPage() {
         </DeliveryTrackingMap>
       </div>}
       {view === "customer" && <>
+        {order.status !== "delivered" && codeReleased(order) && <CustomerEncontro order={order} />}
+        {order.status === "on_route" && !codeReleased(order) && <div className="trip-code-locked"><Lock size={22} aria-hidden="true" />
+          <span><b>Código de entrega</b>Liberado quando {order.courier} estiver chegando. Ele garante que o pedido é entregue a você.</span></div>}
         <div className="trip-customer-grid">
           <section className="trip-hero trip-customer-hero">
             <div className="trip-hero-copy">
@@ -619,11 +716,12 @@ export default function DemoPage() {
               <p>{order.status === "on_route" ? `${order.courier} está levando seu pedido.` :
                 order.status === "arrived" ? `${order.courier} chegou ao destino.` :
                   order.status === "delivered" ? "A entrega foi concluída." : "O estabelecimento confirmou seu pedido."}</p>
+              {order.status === "delivered" && order.verified && <p className="trip-verified"><ShieldCheck size={18} aria-hidden="true" /> Entrega verificada com o seu código</p>}
               <p className="trip-cashback-note"><Gift size={20} aria-hidden="true" />
                 {order.status === "delivered" ? <span>Você ganhou <strong>{brl.format(cashbackPerOrder)}</strong> de cashback para o próximo pedido.</span>
                   : <span>Ao receber, você ganha <strong>{brl.format(cashbackPerOrder)}</strong> de cashback.</span>}</p>
             </div>
-            <img className="trip-customer-art" src="/redesign/customer.webp" alt="" width={602} height={620} />
+            <Art name="burger" className="trip-customer-art" label={false} />
             {order.status !== "delivered" && <Pill disabled={order.ready} onClick={() => move({ ready: true })}>
               {order.ready ? <>Pronto confirmado <Check size={20} /></> : <>Estou pronto para receber <ArrowRight size={22} /></>}
             </Pill>}
@@ -654,8 +752,14 @@ export default function DemoPage() {
           <button className="trip-pill" type="submit">Criar pedido <ArrowRight size={20} /></button>
         </form>}
         {modal === "details" && <div className="trip-detail">
-          <StatusBadge status={order.status} />
+          <StatusBadge status={order.status} verified={order.verified} />
           <h3>{order.customer}</h3><p>{order.destination}</p><p>Entregador: {order.courier}</p>
+          {order.status === "delivered" && <p>{order.verified ? "Entrega verificada: o cliente informou o código." : "Concluída sem o código de entrega."}</p>}
+          {(order.status === "on_route" || order.status === "arrived") && <>
+            <p>Entrega com código: o entregador conclui digitando o código que só o cliente vê.{order.failed ? ` ${order.failed} tentativa${order.failed === 1 ? "" : "s"} errada${order.failed === 1 ? "" : "s"}.` : ""}</p>
+            <button type="button" className="trip-text-button" onClick={() => { move({ status: "delivered", sharing: false, verified: false }); setModal(null); setFeedback("Entrega concluída pelo estabelecimento"); }}>
+              Concluir sem o código <Check size={16} /></button>
+          </>}
           <p>{order.ready ? "Cliente pronto para receber" : "Aguardando confirmação do cliente"}</p>
           <div className="trip-detail-links">
             <Pill secondary onClick={() => void copyLink("courier")}><Clipboard size={17} /> Link do entregador</Pill>

@@ -6,7 +6,7 @@ import type { Courier } from "./types";
 
 type Row = {
   id: string; number: number | null; customer_name: string; customer_phone: string | null; destination: string; status: string;
-  created_at: string; courier_name: string | null; total_amount: number | null; cashback_used: number; cashback_earned: number; minutes: number | null;
+  created_at: string; courier_name: string | null; total_amount: number | null; cashback_used: number; cashback_earned: number; minutes: number | null; code_verified?: boolean;
 };
 type Totals = { total: number; delivered: number; cancelled: number; revenue: number; cashback: number; avg_minutes: number | null };
 const isoDay = (d: Date) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
@@ -65,7 +65,7 @@ export default function HistoryTab({ couriers }: { couriers: Courier[] }) {
           <td>{r.customer_name}{r.customer_phone && <div className="pt-small pt-muted">{phone(r.customer_phone)}</div>}</td>
           <td className="wrap">{r.destination}</td>
           <td>{r.courier_name || "–"}</td>
-          <td><span className={"pt-badge " + r.status}>{statusLabel[r.status]}</span></td>
+          <td><span className={"pt-badge " + r.status}>{statusLabel[r.status]}</span>{r.status === "delivered" && r.code_verified && <span className="pt-verified" title="Código de entrega confirmado"> Verificada</span>}</td>
           <td className="pt-num">{r.minutes != null ? r.minutes + " min" : "–"}</td>
           <td className="pt-num">{r.total_amount != null ? brl(r.total_amount) : "–"}</td>
           <td className="pt-num">{r.cashback_earned > 0 ? "+" + brl(r.cashback_earned) : r.cashback_used > 0 ? "−" + brl(r.cashback_used) : "–"}</td>

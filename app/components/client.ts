@@ -43,6 +43,8 @@ export const statusLabel: Record<string, string> = {
   cancelled: "Cancelado",
   customer_ready: "Cliente pronto para receber",
   destination_confirmed: "Cliente confirmou a localização",
+  code_verified: "Código de entrega confirmado",
+  code_failed: "Código de entrega incorreto",
 };
 export const actorLabel: Record<string, string> = { establishment: "estabelecimento", courier: "entregador", customer: "cliente" };
 export function mapsLinks(point: { lat: number; lng: number } | null, address: string) {

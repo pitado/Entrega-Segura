@@ -1,14 +1,18 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Check, LocateFixed, MapPin, Navigation, Phone } from "lucide-react";
+import { Check, LocateFixed, Lock, MapPin, Navigation, Phone } from "lucide-react";
+import Art from "../../components/Art";
 import PitouLogo from "../../components/PitouLogo";
 import { api, brl, mapsLinks, phone, statusLabel, time, toPoint } from "../../components/client";
+import Radar, { bearingDeg, distanceText } from "../../components/Radar";
+import { distanceMeters } from "../../../lib/geo";
 
 type Order = {
   id: string; number: number | null; customer_name: string; customer_phone: string | null; destination: string;
   destination_latitude: number | null; destination_longitude: number | null; notes: string | null;
   status: "preparing" | "on_route" | "arrived"; customer_ready: boolean; total_amount: number | null; cashback_used: number; created_at: string;
+  code_attempts_left?: number;
 };
 type Data = { courier: { name: string; establishment_name: string; establishment_phone: string | null }; orders: Order[]; today: { delivered: number } };
 type Gps = { state: "off" | "starting" | "on" | "error"; accuracy?: number; sentAt?: number; message?: string };
@@ -91,13 +95,14 @@ export default function CourierApp({ token }: { token: string }) {
   // Sem entrega em rota, o GPS para sozinho.
   useEffect(() => { if (data && !hasRoute && watch.current !== null) stopGps(false); }, [data, hasRoute, stopGps]);
 
-  async function setStatus(o: Order, status: string) {
+  async function setStatus(o: Order, status: string, code?: string): Promise<boolean> {
     setBusy(o.id); setError("");
     try {
-      await api(base, { body: { action: "status", order_id: o.id, status } });
+      await api(base, { body: { action: "status", order_id: o.id, status, ...(code ? { code } : {}) } });
       if (status === "on_route") { lastSent.current = 0; startGps(); }
       await load();
-    } catch (err) { setError((err as Error).message); }
+      return true;
+    } catch (err) { setError((err as Error).message); await load(); return false; }
     finally { setBusy(null); }
   }
 
@@ -107,13 +112,15 @@ export default function CourierApp({ token }: { token: string }) {
   </div></main>;
 
   return <main className="pt"><div className="pt-narrow">
-    <div className="pt-between">
-      <PitouLogo size={34} />
-      <span className="pt-small pt-muted">{data.today.delivered} entregue{data.today.delivered === 1 ? "" : "s"} hoje</span>
+    <div className="pt-brand-head">
+      <span className="pt-grow"><PitouLogo size={32} /></span>
+      <span className={"pt-badge " + (gps.state === "on" ? "on_route" : "")}>{gps.state === "on" ? "Localização ao vivo" : "Localização desligada"}</span>
     </div>
-    <div>
+    <div className="pt-hero-card">
+      <span className="pt-hero-kicker">Entregas de {data.courier.establishment_name}</span>
       <h1>Olá, {data.courier.name.split(" ")[0]}</h1>
-      <p className="pt-muted">Entregas de {data.courier.establishment_name}</p>
+      <p>{data.today.delivered} entregue{data.today.delivered === 1 ? "" : "s"} hoje</p>
+      <Art name="moto" label={false} />
     </div>
 
     <div className="pt-card pt-stack">
@@ -139,7 +146,16 @@ export default function CourierApp({ token }: { token: string }) {
       const point = toPoint(o.destination_latitude, o.destination_longitude);
       const links = mapsLinks(point, o.destination);
       const toCharge = o.total_amount != null ? o.total_amount - (o.cashback_used || 0) : null;
+      const me = lastPos.current && gps.state === "on" ? { lat: lastPos.current.latitude, lng: lastPos.current.longitude } : null;
+      const dist = point && me ? distanceMeters(me, point) : null;
+      const step = o.status === "arrived" ? 3 : 2;
       return <div key={o.id} className="pt-card pt-stack">
+        {o.status !== "preparing" && <div className="pt-courier-encontro">
+          <div className="pt-steps-head"><b>{o.status === "arrived" ? "No destino" : "Em rota"}</b>{o.number && <span className="pt-muted"> #{o.number}</span>}<span className="pt-grow" /><span className="pt-muted">Etapa {step} de 4</span></div>
+          <div className="pt-steps" aria-hidden="true">{[1, 2, 3, 4].map(i => <i key={i} data-done={i < step ? "" : undefined} data-now={i === step ? "" : undefined} />)}</div>
+          <p className="pt-encontro-distance">{dist != null ? distanceText(dist).replace(/^m/, "M") : "Ative a localização"}</p>
+          {dist != null && point && me && <div className="pt-radar-box"><Radar distance={dist} centerLabel={o.customer_name.split(" ")[0]} dotLabel="Você" bearing={bearingDeg(point, me)} /></div>}
+        </div>}
         <div className="pt-between">
           <h2>{o.number ? `#${o.number} · ` : ""}{o.customer_name}</h2>
           <span className={"pt-badge " + o.status}>{statusLabel[o.status]}</span>
@@ -158,9 +174,41 @@ export default function CourierApp({ token }: { token: string }) {
         </div>
         {o.status === "preparing" && <button className="pt-btn pt-btn-block" disabled={busy === o.id} onClick={() => setStatus(o, "on_route")}>Saí para entrega</button>}
         {o.status === "on_route" && <button className="pt-btn pt-btn-light pt-btn-block" disabled={busy === o.id} onClick={() => setStatus(o, "arrived")}>Cheguei no endereço</button>}
-        {o.status !== "preparing" && <button className="pt-btn pt-btn-green pt-btn-block" disabled={busy === o.id} onClick={() => setStatus(o, "delivered")}><Check size={18} /> Entrega concluída</button>}
+        {o.status !== "preparing" && <CodeEntry
+          attemptsLeft={o.code_attempts_left ?? 5}
+          busy={busy === o.id}
+          onSubmit={code => setStatus(o, "delivered", code)} />}
       </div>;
     })}
     <p className="pt-footer-note">Não compartilhe este link. Ele dá acesso às suas entregas.</p>
   </div></main>;
+}
+
+/** O entregador digita o código que o cliente fala na hora da entrega. Sem ele, a entrega não é concluída. */
+function CodeEntry({ attemptsLeft, busy, onSubmit }: {
+  attemptsLeft: number; busy: boolean; onSubmit: (code: string) => Promise<boolean>;
+}) {
+  const [code, setCode] = useState("");
+  const blocked = attemptsLeft <= 0;
+  async function submit() {
+    if (code.length !== 4 || busy) return;
+    if (!(await onSubmit(code))) setCode("");
+  }
+  return <><div className="pt-code-entry">
+    <div className="pt-code-entry-head">
+      <b>Código de entrega</b>
+      {attemptsLeft < 5 && !blocked && <span className="pt-distance">{attemptsLeft} tentativa{attemptsLeft === 1 ? "" : "s"}</span>}
+    </div>
+    {blocked ? <p className="pt-notice"><Lock size={15} aria-hidden="true" /> Muitas tentativas com o código errado. Peça ao estabelecimento para concluir a entrega.</p> : <>
+            <label className="pt-code-boxes">
+        {[0, 1, 2, 3].map(i => <span key={i} data-filled={code[i] ? "" : undefined} data-cursor={i === Math.min(code.length, 3) ? "" : undefined} aria-hidden="true">{code[i] || ""}</span>)}
+        <input value={code} inputMode="numeric" autoComplete="one-time-code" maxLength={4} aria-label="Código de entrega de 4 dígitos"
+          onChange={e => setCode(e.target.value.replace(/\D/g, "").slice(0, 4))}
+          onKeyDown={e => { if (e.key === "Enter") submit(); }} />
+      </label>
+      <p className="pt-small">Peça ao cliente o código de 4 dígitos, pessoalmente.</p>
+    </>}
+  </div>
+  {!blocked && <button className="pt-btn pt-btn-green pt-btn-block pt-btn-lg" disabled={busy || code.length !== 4} onClick={submit}><Check size={20} /> Concluir entrega</button>}
+  </>;
 }

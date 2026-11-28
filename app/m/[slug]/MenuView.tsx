@@ -42,6 +42,6 @@ export default function MenuView({ products, whatsapp, name }: { products: MenuP
         <ShoppingBag size={18} /> Pedir pelo WhatsApp · {count} {count === 1 ? "item" : "itens"} · {brl(total)}
       </a>
     </div>}
-    <p className="pt-footer-note">Cardápio digital por <a href="/"><span className="pitou-logo"><span className="pitou-wordmark">pitou</span></span></a></p>
+    <p className="pt-footer-note">Cardápio digital por <a href="/"><span className="pitou-logo"><span className="pitou-wordmark">Pitou</span></span></a></p>
   </div>;
 }

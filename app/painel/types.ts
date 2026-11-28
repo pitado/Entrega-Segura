@@ -18,7 +18,7 @@ export type Order = {
   status: "preparing" | "on_route" | "arrived" | "delivered" | "cancelled"; customer_ready: boolean; tracking_token: string;
   created_at: string; updated_at: string; delivered_at: string | null; cancelled_at: string | null;
   courier_id: string | null; courier_name: string | null; total_amount: number | null; cashback_used: number; cashback_earned: number;
-  latitude: number | null; longitude: number | null; location_at: string | null;
+  latitude: number | null; longitude: number | null; location_at: string | null; code_verified: boolean;
 };
 export type Today = { delivered: number; active: number; revenue: number; cashback: number; avg_minutes: number | null };
 export type Access = { active: boolean; reason: "admin" | "exempt" | "paid" | "trial" | "none"; trialEndsAt: string | null; paidUntil: string | null };
